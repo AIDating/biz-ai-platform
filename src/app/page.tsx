@@ -5,6 +5,7 @@ import { Logo, LogoMark } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { getDictionary, getLocale } from "@/i18n";
+import type { Dictionary } from "@/i18n/ro";
 
 export const instant = false;
 
@@ -56,7 +57,7 @@ async function Home() {
             </Button>
           </div>
         </div>
-        <SampleChat />
+        <SampleChat copy={dict.landing.sampleChat} />
       </main>
 
       <section className="border-t py-16">
@@ -97,24 +98,20 @@ async function Home() {
   );
 }
 
-function SampleChat() {
+function SampleChat({ copy }: { copy: Dictionary["landing"]["sampleChat"] }) {
   return (
     <div className="border border-[#ececec] bg-white p-5 shadow-[0_24px_50px_-36px_rgba(0,0,0,0.35)]">
       <div className="flex items-center gap-2.5 border-b pb-3">
         <LogoMark className="h-8 w-8" />
         <div>
           <p className="text-[11px] font-semibold tracking-[0.22em] text-[#E10600]">REDLINE</p>
-          <p className="text-sm">Salon Iris</p>
+          <p className="text-sm">{copy.business}</p>
         </div>
       </div>
       <div className="space-y-3 py-4 text-sm">
-        <p className="max-w-[85%] border px-3 py-2">
-          Bună! Sunt recepția Salon Iris. Cu ce vă pot ajuta?
-        </p>
-        <p className="ml-auto max-w-[85%] bg-[#111111] px-3 py-2 text-white">
-          Aș vrea un vopsit joi, pe la 15:30. Mă numesc Maria Stan, 0744 111 222.
-        </p>
-        <p className="max-w-[85%] border px-3 py-2">Gata. V-am notat joi la 15:30 pentru vopsit.</p>
+        <p className="max-w-[85%] border px-3 py-2">{copy.agent}</p>
+        <p className="ml-auto max-w-[85%] bg-[#111111] px-3 py-2 text-white">{copy.visitor}</p>
+        <p className="max-w-[85%] border px-3 py-2">{copy.confirm}</p>
       </div>
     </div>
   );

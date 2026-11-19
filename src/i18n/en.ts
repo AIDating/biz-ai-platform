@@ -58,6 +58,13 @@ export const en: Dictionary = {
     demoBody: "After seeding, sign in as one of the businesses to see a filled-in desk.",
     salon: "Salon Iris — iris@salon-iris.ro — DemoIris2026!",
     garage: "Service Auto Radu — radu@service-radu.ro — DemoRadu2026!",
+    sampleChat: {
+      business: "Salon Iris",
+      agent: "Hello! This is the desk at Salon Iris. How can I help?",
+      visitor:
+        "I'd like a color appointment on Thursday around 3:30 PM. My name is Maria Stan, 0744 111 222.",
+      confirm: "Done. You're booked Thursday at 3:30 PM for color.",
+    },
   },
   auth: {
     loginTitle: "Sign in",

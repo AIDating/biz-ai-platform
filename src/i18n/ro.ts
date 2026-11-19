@@ -56,6 +56,14 @@ export const ro = {
     demoBody: "După seed, intrați cu una dintre afaceri ca să vedeți datele deja completate.",
     salon: "Salon Iris — iris@salon-iris.ro — DemoIris2026!",
     garage: "Service Auto Radu — radu@service-radu.ro — DemoRadu2026!",
+    sampleChat: {
+      business: "Salon Iris",
+      agent:
+        "Bună! Sunt recepția Salon Iris. Cu ce vă pot ajuta?",
+      visitor:
+        "Aș vrea un vopsit joi, pe la 15:30. Mă numesc Maria Stan, 0744 111 222.",
+      confirm: "Gata. V-am notat joi la 15:30 pentru vopsit.",
+    },
   },
   auth: {
     loginTitle: "Intrați în panou",
