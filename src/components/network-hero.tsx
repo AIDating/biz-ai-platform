@@ -1,7 +1,5 @@
 "use client";
 
-import { LogoMark } from "@/components/logo";
-
 type Labels = {
   socials: string;
   database: string;
@@ -74,7 +72,7 @@ export function NetworkHero({ labels }: { labels: Labels }) {
         <div className="flex flex-col items-center gap-3">
           <p className="text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase">{labels.assistant}</p>
           <div className="network-node network-node-assistant relative flex h-20 w-20 items-center justify-center border border-[#111] bg-[#111] text-white">
-            <LogoMark className="h-10 w-10 brightness-0 invert" />
+            <AssistantIcon className="h-9 w-9" />
             <span className="network-pulse absolute inset-0 border border-[#E10600]" aria-hidden />
           </div>
         </div>
@@ -111,6 +109,22 @@ function DatabaseIcon({ className }: { className?: string }) {
       <ellipse cx="12" cy="5" rx="8" ry="3" stroke="currentColor" strokeWidth="1.6" />
       <path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5" stroke="currentColor" strokeWidth="1.6" />
       <path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function AssistantIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden>
+      <path
+        d="M5 6.5A3.5 3.5 0 0 1 8.5 3h7A3.5 3.5 0 0 1 19 6.5v6A3.5 3.5 0 0 1 15.5 16H11l-4 4v-4H8.5A3.5 3.5 0 0 1 5 12.5v-6z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <circle cx="9.2" cy="9.2" r="1" fill="currentColor" />
+      <circle cx="12" cy="9.2" r="1" fill="currentColor" />
+      <circle cx="14.8" cy="9.2" r="1" fill="currentColor" />
     </svg>
   );
 }

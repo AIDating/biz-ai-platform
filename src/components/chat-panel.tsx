@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LogoMark } from "@/components/logo";
+import { RedLineWordmark } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Dictionary } from "@/i18n/ro";
@@ -128,10 +128,9 @@ export function ChatPanel({
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
       <header className="flex items-center gap-2.5 border-b px-4 py-3">
-        <LogoMark className="h-8 w-8 shrink-0" />
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold tracking-[0.22em] text-[#E10600]">{copy.desk}</p>
-          <p className="truncate text-sm font-medium leading-tight">{businessName}</p>
+          <RedLineWordmark className="text-[1.05rem]" />
+          <p className="mt-1 truncate text-sm font-medium leading-tight text-muted-foreground">{businessName}</p>
         </div>
       </header>
       {offline ? (
