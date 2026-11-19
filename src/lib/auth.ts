@@ -76,7 +76,8 @@ export async function createSession(userId: string) {
   jar.set(COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // Secure cookies are dropped on plain http://127.0.0.1. Enable on Vercel/HTTPS.
+    secure: process.env.COOKIE_SECURE === "1" || process.env.VERCEL === "1",
     path: "/",
     expires: new Date(Date.now() + FOURTEEN_DAYS),
   });

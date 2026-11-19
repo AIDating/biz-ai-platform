@@ -38,6 +38,24 @@ If `OPENAI_API_KEY` is empty, the widget uses a clearly labelled demo responder.
 
 `SESSION_SECRET` signs the session cookie. Use a long random value outside this machine.
 
+## Publish (Vercel)
+
+Use the **Publish** control in Cursor, or connect the repo in the Vercel dashboard.
+
+Before the live site can sign people in and store bookings:
+
+1. Create a **Postgres** database (Vercel Storage → Postgres, or Neon / Supabase).
+2. In `prisma/schema.prisma`, set `provider = "postgresql"` (local stays on SQLite until you do this).
+3. In the Vercel project env vars, set at least:
+   - `DATABASE_URL` — the Postgres connection string
+   - `SESSION_SECRET` — a long random string
+   - optional: `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODEL`
+4. After the first deploy, run migrations against that database (`npx prisma db push` with the production `DATABASE_URL`, then seed if you want the demo salons).
+
+SQLite (`file:./dev.db`) is for local runs only. Vercel’s filesystem is not a durable database.
+
+Session cookies use `Secure` automatically when `VERCEL=1` (HTTPS). Local `npm run start` over plain HTTP keeps them non-Secure so login still works on `127.0.0.1`.
+
 ## Embed the widget
 
 In the dashboard, open Widget and copy the snippet. It looks like this:
@@ -106,6 +124,24 @@ OPENAI_MODEL=gpt-4o-mini
 Dacă `OPENAI_API_KEY` este goală, chatul folosește un răspuns demonstrativ, marcat ca atare. Citește setările afacerii, oferă intervale reale și poate face programarea. Cu o cheie, aceleași unelte merg la modelul din `OPENAI_MODEL`.
 
 `SESSION_SECRET` semnează sesiunea. În afara acestei mașini, puneți un șir lung și aleator.
+
+## Publicare (Vercel)
+
+Folosiți **Publish** în Cursor sau conectați repo-ul în Vercel.
+
+Înainte ca site-ul live să țină sesiuni și programări:
+
+1. Creați o bază **Postgres** (Vercel Storage → Postgres, sau Neon / Supabase).
+2. În `prisma/schema.prisma`, setați `provider = "postgresql"` (local rămâne pe SQLite până atunci).
+3. În variabilele de mediu Vercel puneți cel puțin:
+   - `DATABASE_URL` — connection string Postgres
+   - `SESSION_SECRET` — șir lung aleator
+   - opțional: `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODEL`
+4. După primul deploy, rulați migrările pe acea bază (`npx prisma db push` cu `DATABASE_URL` de producție, apoi seed dacă vreți saloanele demo).
+
+SQLite (`file:./dev.db`) e doar pentru local. Pe Vercel filesystem-ul nu e bază de date.
+
+Cookie-urile de sesiune sunt `Secure` automat când `VERCEL=1` (HTTPS). Local, pe HTTP, rămân fără Secure ca să meargă loginul pe `127.0.0.1`.
 
 ## Widgetul
 
