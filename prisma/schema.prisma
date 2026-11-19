@@ -1,0 +1,212 @@
+// SQLite for local runs. The same models move to Postgres without a rewrite:
+// keep the tenantId column on every business-owned row and the partial unique
+// index that blocks double-booking (see src/lib/db.ts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// A business. Every customer, conversation, and booking hangs off this row.
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  publicKey String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  agent         AgentProfile?
+  availability  AvailabilityRule[]
+  visitors      Visitor[]
+  conversations Conversation[]
+  messages      Message[]
+  leads         Lead[]
+  appointments  Appointment[]
+  integrations  Integration[]
+  proposals     ContentProposal[]
+}
+
+model User {
+  id           String    @id @default(cuid())
+  tenantId     String
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         String    @default("owner")
+  createdAt    DateTime  @default(now())
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sessions     Session[]
+
+  @@index([tenantId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// How this tenant's receptionist behaves. One row per business.
+model AgentProfile {
+  id                 String   @id @default(cuid())
+  tenantId           String   @unique
+  businessName       String
+  description        String   @default("")
+  servicesJson       String   @default("[]")
+  tone               String   @default("prietenos")
+  customInstructions String   @default("")
+  enabled            Boolean  @default(true)
+  slotMinutes        Int      @default(30)
+  timezone           String   @default("Europe/Bucharest")
+  greeting           String   @default("")
+  updatedAt          DateTime @updatedAt
+  tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+/// Weekly opening hours. dayOfWeek follows JavaScript: 0 = Sunday … 6 = Saturday.
+model AvailabilityRule {
+  id        String  @id @default(cuid())
+  tenantId  String
+  dayOfWeek Int
+  startMin  Int
+  endMin    Int
+  enabled   Boolean @default(true)
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, dayOfWeek])
+  @@index([tenantId])
+}
+
+/// A person who contacted the business. `source` is the channel
+/// (web_widget today; whatsapp, phone, tiktok later) so new channels
+/// reuse this row instead of a new table.
+model Visitor {
+  id            String         @id @default(cuid())
+  tenantId      String
+  anonKey       String
+  name          String         @default("")
+  email         String         @default("")
+  phone         String         @default("")
+  source        String         @default("web_widget")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  leads         Lead[]
+  conversations Conversation[]
+  appointments  Appointment[]
+
+  @@unique([tenantId, anonKey])
+  @@index([tenantId])
+}
+
+model Conversation {
+  id            String    @id @default(cuid())
+  tenantId      String
+  visitorId     String
+  channel       String    @default("web_widget")
+  status        String    @default("open")
+  lastMessageAt DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  visitor       Visitor   @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  messages      Message[]
+
+  @@index([tenantId, lastMessageAt])
+  @@index([visitorId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  tenantId       String
+  conversationId String
+  role           String
+  content        String
+  createdAt      DateTime     @default(now())
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, conversationId, createdAt])
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  tenantId  String
+  visitorId String?
+  name      String
+  email     String   @default("")
+  phone     String   @default("")
+  note      String   @default("")
+  status    String   @default("new")
+  source    String   @default("web_widget")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  visitor   Visitor? @relation(fields: [visitorId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, status])
+  @@index([visitorId])
+}
+
+model Appointment {
+  id          String   @id @default(cuid())
+  tenantId    String
+  visitorId   String?
+  clientName  String
+  clientPhone String   @default("")
+  clientEmail String   @default("")
+  service     String   @default("")
+  startsAt    DateTime
+  endsAt      DateTime
+  status      String   @default("booked")
+  notes       String   @default("")
+  source      String   @default("web_widget")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  visitor     Visitor? @relation(fields: [visitorId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, startsAt])
+}
+
+/// Per-channel connection for a later phase. Rows are created disabled.
+/// Channels: whatsapp, phone, tiktok, facebook, instagram.
+model Integration {
+  id         String   @id @default(cuid())
+  tenantId   String
+  channel    String
+  enabled    Boolean  @default(false)
+  configJson String   @default("{}")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, channel])
+  @@index([tenantId])
+}
+
+/// Future marketing agent. status stays pending_approval until a person decides.
+/// Nothing in this codebase publishes a post or spends money.
+model ContentProposal {
+  id        String    @id @default(cuid())
+  tenantId  String
+  channel   String
+  title     String    @default("")
+  body      String
+  status    String    @default("pending_approval")
+  createdAt DateTime  @default(now())
+  decidedAt DateTime?
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+}
