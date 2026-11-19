@@ -1,14 +1,16 @@
-// SQLite for local runs. The same models move to Postgres without a rewrite:
-// keep the tenantId column on every business-owned row and the partial unique
-// index that blocks double-booking (see src/lib/db.ts).
+// Lakebase Postgres on Neon. App traffic uses the pooled DATABASE_URL;
+// Prisma CLI (db push / migrate) uses DATABASE_URL_UNPOOLED (direct).
+// Keep tenantId on every business-owned row and the partial unique index
+// that blocks double-booking (see src/lib/db.ts).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 /// A business. Every customer, conversation, and booking hangs off this row.
