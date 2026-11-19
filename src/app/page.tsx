@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { LocaleSwitch } from "@/components/locale-switch";
-import { Logo, LogoMark } from "@/components/logo";
+import { Logo } from "@/components/logo";
+import { NetworkHero } from "@/components/network-hero";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { getDictionary, getLocale } from "@/i18n";
-import type { Dictionary } from "@/i18n/ro";
 
 export const instant = false;
 
@@ -20,8 +20,8 @@ export default function HomePage() {
 async function Home() {
   const [dict, locale, user] = await Promise.all([getDictionary(), getLocale(), getCurrentUser()]);
   return (
-    <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4">
-      <header className="flex items-center justify-between gap-3 py-5">
+    <div className="landing-shell relative mx-auto flex min-h-screen max-w-6xl flex-col px-4">
+      <header className="landing-rise flex items-center justify-between gap-3 py-5" style={{ animationDelay: "0ms" }}>
         <Logo />
         <div className="flex items-center gap-2">
           <LocaleSwitch locale={locale} label={dict.localeLabel} />
@@ -42,12 +42,14 @@ async function Home() {
         </div>
       </header>
 
-      <main className="grid flex-1 items-center gap-16 py-16 lg:grid-cols-[1.15fr_0.85fr]">
-        <div>
+      <main className="grid flex-1 items-center gap-12 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:py-14">
+        <div className="landing-rise" style={{ animationDelay: "80ms" }}>
           <span className="red-rule" />
-          <p className="mt-6 text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground">{dict.landing.eyebrow}</p>
-          <h1 className="mt-4 max-w-xl text-5xl leading-[1.02] text-balance sm:text-6xl">{dict.landing.title}</h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">{dict.landing.subtitle}</p>
+          <p className="mt-6 text-[11px] font-medium uppercase tracking-[0.22em] text-[#E10600]">{dict.landing.eyebrow}</p>
+          <h1 className="mt-4 max-w-xl text-4xl leading-[1.05] text-balance sm:text-5xl lg:text-[3.35rem]">
+            {dict.landing.title}
+          </h1>
+          <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">{dict.landing.subtitle}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg">
               <Link href="/signup">{dict.landing.primary}</Link>
@@ -57,7 +59,10 @@ async function Home() {
             </Button>
           </div>
         </div>
-        <SampleChat copy={dict.landing.sampleChat} />
+
+        <div className="landing-rise" style={{ animationDelay: "160ms" }}>
+          <NetworkHero labels={dict.landing.network} />
+        </div>
       </main>
 
       <section className="border-t py-16">
@@ -85,6 +90,42 @@ async function Home() {
         </div>
       </section>
 
+      <section id="pricing" className="border-t py-16">
+        <h2 className="text-3xl">{dict.landing.pricingTitle}</h2>
+        <p className="mt-3 max-w-2xl text-muted-foreground">{dict.landing.pricingSubtitle}</p>
+        <div className="mt-10 grid gap-6 lg:grid-cols-3">
+          {dict.landing.pricing.map((plan) => (
+            <article
+              key={plan.name}
+              className={`flex flex-col border p-6 ${
+                plan.featured ? "border-[#E10600] bg-[#fff8f7]" : "border-[#ececec] bg-white"
+              }`}
+            >
+              <p className="text-[11px] font-medium tracking-[0.18em] text-[#E10600] uppercase">{plan.name}</p>
+              <p className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-medium tracking-tight">{plan.price}</span>
+                <span className="text-sm text-muted-foreground">{plan.period}</span>
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{plan.blurb}</p>
+              <ul className="mt-6 space-y-2 text-sm">
+                {plan.features.map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 bg-[#E10600]" aria-hidden />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-8">
+                <Button asChild className="w-full" variant={plan.featured ? "default" : "outline"}>
+                  <Link href="/signup">{plan.cta}</Link>
+                </Button>
+              </div>
+            </article>
+          ))}
+        </div>
+        <p className="mt-6 text-sm text-muted-foreground">{dict.landing.pricingNote}</p>
+      </section>
+
       <footer className="mt-auto flex flex-col gap-3 border-t py-6 text-sm text-muted-foreground sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="font-medium text-foreground">{dict.landing.demoTitle}</p>
@@ -94,25 +135,6 @@ async function Home() {
         </div>
         <p>© 2026 REDLINE</p>
       </footer>
-    </div>
-  );
-}
-
-function SampleChat({ copy }: { copy: Dictionary["landing"]["sampleChat"] }) {
-  return (
-    <div className="border border-[#ececec] bg-white p-5 shadow-[0_24px_50px_-36px_rgba(0,0,0,0.35)]">
-      <div className="flex items-center gap-2.5 border-b pb-3">
-        <LogoMark className="h-8 w-8" />
-        <div>
-          <p className="text-[11px] font-semibold tracking-[0.22em] text-[#E10600]">REDLINE</p>
-          <p className="text-sm">{copy.business}</p>
-        </div>
-      </div>
-      <div className="space-y-3 py-4 text-sm">
-        <p className="max-w-[85%] border px-3 py-2">{copy.agent}</p>
-        <p className="ml-auto max-w-[85%] bg-[#111111] px-3 py-2 text-white">{copy.visitor}</p>
-        <p className="max-w-[85%] border px-3 py-2">{copy.confirm}</p>
-      </div>
     </div>
   );
 }

@@ -85,3 +85,111 @@ h2,
   width: 2.75rem;
   background: var(--red);
 }
+
+.landing-shell::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: -10% -20% auto;
+  height: 42vh;
+  background:
+    radial-gradient(ellipse 55% 50% at 78% 20%, rgba(225, 6, 0, 0.08), transparent 70%),
+    radial-gradient(ellipse 40% 45% at 12% 0%, rgba(17, 17, 17, 0.04), transparent 65%);
+  z-index: -1;
+}
+
+.landing-rise {
+  animation: landing-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.network-grid {
+  background-image:
+    linear-gradient(rgba(225, 6, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(225, 6, 0, 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse at center, #000 35%, transparent 80%);
+}
+
+.network-node {
+  animation: network-float 4.5s ease-in-out infinite;
+}
+
+.network-node-core {
+  animation-delay: 0.4s;
+}
+
+.network-node-assistant {
+  animation-delay: 0.8s;
+}
+
+.network-pulse {
+  animation: network-pulse 2.4s ease-out infinite;
+}
+
+.network-path {
+  animation: network-dash 1.6s linear infinite;
+}
+
+.network-arrow {
+  animation: network-nudge 1.8s ease-in-out infinite;
+}
+
+@keyframes landing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes network-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes network-pulse {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.28);
+  }
+}
+
+@keyframes network-dash {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+@keyframes network-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateX(4px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-rise,
+  .network-node,
+  .network-pulse,
+  .network-path,
+  .network-arrow {
+    animation: none !important;
+  }
+}

@@ -16,13 +16,19 @@ export const ro = {
     home: "Acasă",
   },
   landing: {
-    eyebrow: "Pentru saloane, cabinete și ateliere",
-    title: "Cineva răspunde la clienți, chiar și când sunteți ocupați.",
+    eyebrow: "REȚELE · BAZĂ DE DATE · ASISTENT",
+    title: "Tot ce scriu clienții pe rețele ajunge la un asistent care cunoaște afacerea.",
     subtitle:
-      "REDLINE stă pe site-ul dumneavoastră, răspunde cu datele afacerii, notează numele și telefonul și pune programarea în calendar.",
+      "TikTok, Facebook și Instagram se leagă de baza dumneavoastră de date. REDLINE răspunde, notează contactul și pune programarea — dintr-un singur loc.",
     primary: "Creează contul afacerii",
     secondary: "Vezi salonul demo",
-    stepsTitle: "Trei pași, apoi widgetul e pe site",
+    network: {
+      flow: "De la mesaj la răspuns, prin datele afacerii",
+      socials: "Rețele",
+      database: "Bază de date",
+      assistant: "Asistent",
+    },
+    stepsTitle: "Trei pași, apoi firul e legat",
     steps: [
       {
         title: "Deschideți contul",
@@ -33,8 +39,8 @@ export const ro = {
         body: "Servicii, program, ton și orice regulă pe care o spuneți și la telefon.",
       },
       {
-        title: "Puneți un script pe site",
-        body: "Vizitatorii scriu în chat. Dumneavoastră vedeți lead-ul, conversația și programarea.",
+        title: "Legați canalele",
+        body: "Site acum; TikTok, Facebook și Instagram pe același fir, când le activați.",
       },
     ],
     featuresTitle: "Ce vedeți în fiecare zi",
@@ -52,18 +58,42 @@ export const ro = {
         body: "Când îl opriți, chatul spune că reveniți și păstrează mesajul.",
       },
     ],
+    pricingTitle: "Prețuri clare, fără surprize",
+    pricingSubtitle: "Începeți mic. Creșteți când mesajele o cer.",
+    pricing: [
+      {
+        name: "Start",
+        price: "0 €",
+        period: "/ lună",
+        blurb: "Pentru a vedea firul social → date → asistent pe site.",
+        features: ["1 afacere", "Widget pe site", "Răspunsuri demonstrative", "Calendar de bază"],
+        cta: "Începe gratuit",
+        featured: false,
+      },
+      {
+        name: "Studio",
+        price: "29 €",
+        period: "/ lună",
+        blurb: "Pentru saloane și ateliere care vor răspunsuri reale și programări.",
+        features: ["Model AI real", "Clienți și conversații", "Programări fără dubluri", "Pregătit pentru canale"],
+        cta: "Alege Studio",
+        featured: true,
+      },
+      {
+        name: "Rețea",
+        price: "79 €",
+        period: "/ lună",
+        blurb: "Când TikTok, Facebook și Instagram trebuie pe același asistent.",
+        features: ["Mai multe canale", "Prioritate la răspuns", "Spațiu pentru volum", "Suport dedicat"],
+        cta: "Alege Rețea",
+        featured: false,
+      },
+    ],
+    pricingNote: "Prețurile sunt orientative pentru faza 1. Facturarea live se activează când canalele sociale sunt conectate.",
     demoTitle: "Conturi de demonstrație",
     demoBody: "După seed, intrați cu una dintre afaceri ca să vedeți datele deja completate.",
     salon: "Salon Iris — iris@salon-iris.ro — DemoIris2026!",
     garage: "Service Auto Radu — radu@service-radu.ro — DemoRadu2026!",
-    sampleChat: {
-      business: "Salon Iris",
-      agent:
-        "Bună! Sunt recepția Salon Iris. Cu ce vă pot ajuta?",
-      visitor:
-        "Aș vrea un vopsit joi, pe la 15:30. Mă numesc Maria Stan, 0744 111 222.",
-      confirm: "Gata. V-am notat joi la 15:30 pentru vopsit.",
-    },
   },
   auth: {
     loginTitle: "Intrați în panou",
