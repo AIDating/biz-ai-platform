@@ -5,11 +5,18 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["tests/secret-crypto.test.ts", "tests/services-fx.test.ts", "tests/service-currency.test.ts"],
+    include: [
+      "tests/secret-crypto.test.ts",
+      "tests/services-fx.test.ts",
+      "tests/service-currency.test.ts",
+      "tests/marketing-youtube.test.ts",
+      "tests/marketing-google-ads.test.ts",
+    ],
   },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "server-only": path.resolve(__dirname, "./node_modules/server-only/empty.js"),
     },
   },
 });
