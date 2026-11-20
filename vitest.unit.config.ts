@@ -11,6 +11,7 @@ export default defineConfig({
       "tests/service-currency.test.ts",
       "tests/marketing-youtube.test.ts",
       "tests/marketing-google-ads.test.ts",
+      "tests/marketing-analytics.test.ts",
     ],
   },
   resolve: {
