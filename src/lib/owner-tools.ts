@@ -623,6 +623,8 @@ export async function executeOwnerTool(
               channel: item.channel,
               connected: item.connected,
               accountLabel: item.accountLabel,
+              hasKeys: item.hasKeys,
+              source: item.source,
             })),
             brief,
             posts: posts.map((post) => ({
