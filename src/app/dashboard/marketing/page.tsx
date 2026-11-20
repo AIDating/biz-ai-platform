@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDictionary, getLocale } from "@/i18n";
 import { requireUser } from "@/lib/auth";
+import { cn } from "@/lib/cn";
 import { loadBrief, loadPlatformLinks, parsePayload, type ProposalStatus } from "@/lib/marketing";
 import {
   MARKETING_PLATFORMS,
@@ -78,12 +79,16 @@ async function MarketingContent({
       ? (params.platform as MarketingPlatform)
       : null;
   const flashError = params.error as keyof typeof copy.oauthErrors | undefined;
-  const flashMessage =
+  const flashTemplate =
     flashPlatform && flashError === "missing_config"
-      ? copy.configMissing.replaceAll("{platform}", copy.platforms[flashPlatform].name)
+      ? copy.configMissing
       : flashError && flashError in copy.oauthErrors
         ? copy.oauthErrors[flashError]
         : null;
+  const flashMessage =
+    flashTemplate && flashPlatform
+      ? flashTemplate.replaceAll("{platform}", copy.platforms[flashPlatform].name)
+      : flashTemplate;
 
   const openStatuses = new Set(["pending_approval", "needs_changes"]);
   const openProposals: ProposalCardModel[] = [];
@@ -142,7 +147,7 @@ async function MarketingContent({
   });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto max-w-7xl space-y-8">
       <div className="max-w-3xl">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="font-display text-4xl">{copy.title}</h1>
@@ -159,8 +164,8 @@ async function MarketingContent({
 
       <section className="space-y-3">
         <h2 className="font-display text-2xl">{copy.platformsTitle}</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {MARKETING_PLATFORMS.map((platform) => {
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
+          {MARKETING_PLATFORMS.map((platform, index) => {
             const meta = copy.platforms[platform];
             const link = links.find((item) => item.channel === platform);
             const hasKeys = Boolean(link?.hasKeys);
@@ -172,7 +177,10 @@ async function MarketingContent({
                   : copy.statusDisconnected
                 : copy.statusNotConfigured;
             return (
-              <Card key={platform} className="flex h-full flex-col">
+              <Card
+                key={platform}
+                className={cn("flex h-full flex-col", index < 3 ? "xl:col-span-2" : "xl:col-span-3")}
+              >
                 <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
                   <div className="flex min-w-0 items-start gap-3">
                     <MarketingPlatformMark platform={platform} />

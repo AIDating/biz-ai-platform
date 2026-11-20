@@ -91,7 +91,7 @@ model AvailabilityRule {
 }
 
 /// A person who contacted the business. `source` is the channel
-/// (web_widget today; whatsapp, phone, tiktok, youtube later) so new channels
+/// (web_widget today; whatsapp, phone, tiktok, youtube, google_ads later) so new channels
 /// reuse this row instead of a new table.
 model Visitor {
   id            String         @id @default(cuid())
@@ -182,7 +182,7 @@ model Appointment {
 }
 
 /// Per-channel connection for a later phase. Rows are created disabled.
-/// Channels: whatsapp, phone, tiktok, facebook, instagram, youtube.
+/// Channels: whatsapp, phone, tiktok, facebook, instagram, youtube, google_ads.
 model Integration {
   id         String   @id @default(cuid())
   tenantId   String

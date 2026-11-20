@@ -149,7 +149,7 @@ describe("youtube marketing platform", () => {
 
   it("registers youtube as the fourth marketing platform", async () => {
     const { MARKETING_PLATFORMS, isMarketingPlatform } = await import("@/lib/marketing-oauth");
-    expect(MARKETING_PLATFORMS).toEqual(["facebook", "instagram", "tiktok", "youtube"]);
+    expect(MARKETING_PLATFORMS).toEqual(["facebook", "instagram", "tiktok", "youtube", "google_ads"]);
     expect(isMarketingPlatform("youtube")).toBe(true);
     expect(isMarketingPlatform("linkedin")).toBe(false);
     expect(CHANNELS).toContain("youtube");
@@ -362,7 +362,13 @@ describe("youtube marketing platform", () => {
       platforms: Array<{ channel: string; hasKeys: boolean; source: string; connected: boolean }>;
       posts: Array<{ channel: string; text: string }>;
     };
-    expect(data.platforms.map((item) => item.channel)).toEqual(["facebook", "instagram", "tiktok", "youtube"]);
+    expect(data.platforms.map((item) => item.channel)).toEqual([
+      "facebook",
+      "instagram",
+      "tiktok",
+      "youtube",
+      "google_ads",
+    ]);
     expect(data.platforms.find((item) => item.channel === "youtube")).toEqual({
       channel: "youtube",
       connected: false,

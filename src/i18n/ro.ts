@@ -250,7 +250,7 @@ export const ro = {
   marketing: {
     title: "Marketing",
     subtitle:
-      "În planul Premium, asistentul se autentifică pe Facebook, Instagram, TikTok și YouTube și publică postări în numele afacerii — doar după aprobarea dumneavoastră.",
+      "În planul Premium, asistentul se autentifică pe Facebook, Instagram, TikTok, YouTube și Google Ads și publică postări în numele afacerii — doar după aprobarea dumneavoastră.",
     premiumBadge: "Premium",
     premiumNote:
       "Această zonă pregătește fluxul Premium: chei API pe platforme, conectare, brief, aprobare, programare și istoric. Introduceți cheile pe fiecare card — nu inventăm credențiale.",
@@ -270,7 +270,7 @@ export const ro = {
       exchange_pending:
         "Codul OAuth a fost primit, dar schimbul de token nu este finalizat în această versiune. Contul rămâne neconectat până la finalizarea Premium.",
       exchange_failed:
-        "YouTube nu a acceptat codul de autorizare. Verificați Client ID și secretul, apoi încercați din nou.",
+        "{platform} nu a acceptat codul de autorizare. Verificați Client ID și secretul, apoi încercați din nou.",
     },
     whatTitle: "Ce face asistentul pe Premium",
     whatBody:
@@ -314,6 +314,12 @@ export const ro = {
           clientSecretLabel: "Client Secret",
           clientSecretPlaceholder: "Secretul client Google / YouTube",
         },
+        google_ads: {
+          clientIdLabel: "Client ID",
+          clientIdPlaceholder: "Client ID Google Ads",
+          clientSecretLabel: "Client Secret",
+          clientSecretPlaceholder: "Secretul client Google Ads",
+        },
       },
     },
     platforms: {
@@ -337,6 +343,11 @@ export const ro = {
         blurb: "Autentificare pe canal și publicare de videoclipuri în numele afacerii.",
         connect: "Conectează-te cu YouTube",
       },
+      google_ads: {
+        name: "Google Ads",
+        blurb: "Autentificare pe contul de anunțuri și campanii în numele afacerii.",
+        connect: "Conectează-te cu Google Ads",
+      },
     },
     brief: {
       title: "Brief pentru asistent",
@@ -357,7 +368,7 @@ export const ro = {
     proposals: {
       title: "Drafturi de aprobat",
       subtitle: "Asistentul a pregătit propunerile. Aprobați, cereți modificări sau respingeți — publicarea nu pornește singură.",
-      empty: "Completați brief-ul ca să apară drafturile pe cele patru platforme.",
+      empty: "Completați brief-ul ca să apară drafturile pe cele cinci platforme.",
       approve: "Aprobă",
       revise: "Cere modificări",
       reject: "Respinge",
@@ -395,6 +406,7 @@ export const ro = {
       filterInstagram: "Instagram",
       filterTiktok: "TikTok",
       filterYoutube: "YouTube",
+      filterGoogleAds: "Google Ads",
     },
   },
   chat: {
@@ -443,6 +455,7 @@ export const ro = {
     facebook: "Facebook",
     instagram: "Instagram",
     youtube: "YouTube",
+    google_ads: "Google Ads",
   },
   tones: {
     prietenos: "Prietenos",

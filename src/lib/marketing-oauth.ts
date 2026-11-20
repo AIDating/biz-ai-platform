@@ -3,16 +3,25 @@ import { createHmac, randomBytes } from "node:crypto";
 import { decryptSecret, encryptSecret, maskSecretHint } from "@/lib/secret-crypto";
 import type { TenantClient } from "@/lib/tenant-db";
 
-export const MARKETING_PLATFORMS = ["facebook", "instagram", "tiktok", "youtube"] as const;
+export const MARKETING_PLATFORMS = ["facebook", "instagram", "tiktok", "youtube", "google_ads"] as const;
 export type MarketingPlatform = (typeof MARKETING_PLATFORMS)[number];
 
-/** Google OAuth for YouTube. Env vars are an optional fallback, never required to build or run. */
+/** Google OAuth. Env vars are an optional fallback, never required to build or run. */
 export const YOUTUBE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 export const YOUTUBE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 export const YOUTUBE_OAUTH_SCOPES = [
   "https://www.googleapis.com/auth/youtube.upload",
   "https://www.googleapis.com/auth/youtube.readonly",
 ].join(" ");
+
+export const GOOGLE_ADS_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+export const GOOGLE_ADS_TOKEN_URL = "https://oauth2.googleapis.com/token";
+export const GOOGLE_ADS_OAUTH_SCOPE = "https://www.googleapis.com/auth/adwords";
+
+/** Platforms that finish Google's authorization-code exchange and store encrypted tokens. */
+function storesOAuthTokens(platform: MarketingPlatform) {
+  return platform === "youtube" || platform === "google_ads";
+}
 
 export function isMarketingPlatform(value: string): value is MarketingPlatform {
   return (MARKETING_PLATFORMS as readonly string[]).includes(value);
@@ -91,6 +100,11 @@ function platformEnv(platform: MarketingPlatform): PlatformEnv {
       return {
         clientId: process.env.YOUTUBE_CLIENT_ID?.trim(),
         clientSecret: process.env.YOUTUBE_CLIENT_SECRET?.trim(),
+      };
+    case "google_ads":
+      return {
+        clientId: process.env.GOOGLE_ADS_CLIENT_ID?.trim(),
+        clientSecret: process.env.GOOGLE_ADS_CLIENT_SECRET?.trim(),
       };
   }
 }
@@ -211,7 +225,7 @@ export async function savePlatformOAuthKeys(
       where: { id: existing.id },
       data: {
         configJson,
-        ...(platform === "youtube" && credentialsChanged ? { enabled: false } : {}),
+        ...(storesOAuthTokens(platform) && credentialsChanged ? { enabled: false } : {}),
       },
     });
   } else {
@@ -228,7 +242,7 @@ export async function clearPlatformOAuthKeys(db: TenantClient, platform: Marketi
   const config = parseIntegrationConfig(existing.configJson);
   delete config.oauth;
   delete config.oauthTokens;
-  if (platform === "youtube") {
+  if (storesOAuthTokens(platform)) {
     delete config.accountLabel;
     delete config.oauthPending;
     delete config.codeReceivedAt;
@@ -319,13 +333,16 @@ export function buildAuthorizeUrl(
     return url.toString();
   }
 
-  if (platform === "youtube") {
-    const url = new URL(YOUTUBE_AUTHORIZE_URL);
+  if (platform === "youtube" || platform === "google_ads") {
+    const url = new URL(platform === "youtube" ? YOUTUBE_AUTHORIZE_URL : GOOGLE_ADS_AUTHORIZE_URL);
     url.searchParams.set("client_id", clientId);
     url.searchParams.set("redirect_uri", redirectUri);
     url.searchParams.set("state", state);
     url.searchParams.set("response_type", "code");
-    url.searchParams.set("scope", YOUTUBE_OAUTH_SCOPES);
+    url.searchParams.set(
+      "scope",
+      platform === "youtube" ? YOUTUBE_OAUTH_SCOPES : GOOGLE_ADS_OAUTH_SCOPE,
+    );
     url.searchParams.set("access_type", "offline");
     url.searchParams.set("prompt", "consent");
     url.searchParams.set("include_granted_scopes", "true");
@@ -341,7 +358,7 @@ export function buildAuthorizeUrl(
   return url.toString();
 }
 
-export type YouTubeTokenResult =
+export type GoogleOAuthTokenResult =
   | {
       ok: true;
       accessToken: string;
@@ -352,20 +369,25 @@ export type YouTubeTokenResult =
     }
   | { ok: false; reason: "exchange_failed" };
 
-/** Exchange a YouTube authorization code at Google's token endpoint. */
-export async function exchangeYouTubeAuthorizationCode(
+export type YouTubeTokenResult = GoogleOAuthTokenResult;
+
+type GoogleOAuthPlatform = "youtube" | "google_ads";
+
+/** Exchange an authorization code at Google's token endpoint. */
+async function exchangeGoogleAuthorizationCode(
+  platform: GoogleOAuthPlatform,
   code: string,
   credentials: OAuthCredentials,
-): Promise<YouTubeTokenResult> {
+): Promise<GoogleOAuthTokenResult> {
   try {
     const body = new URLSearchParams({
       code,
       client_id: credentials.clientId,
       client_secret: credentials.clientSecret,
-      redirect_uri: oauthCallbackUrl("youtube"),
+      redirect_uri: oauthCallbackUrl(platform),
       grant_type: "authorization_code",
     });
-    const response = await fetch(YOUTUBE_TOKEN_URL, {
+    const response = await fetch(platform === "youtube" ? YOUTUBE_TOKEN_URL : GOOGLE_ADS_TOKEN_URL, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body,
@@ -394,17 +416,18 @@ export async function exchangeYouTubeAuthorizationCode(
   }
 }
 
-/** Persist encrypted YouTube tokens on the tenant integration row. No schema change. */
-export async function connectYouTubeAccount(
+/** Persist encrypted Google tokens on the tenant integration row. No schema change. */
+async function connectGoogleAccount(
   db: TenantClient,
   tenantId: string,
+  platform: GoogleOAuthPlatform,
   code: string,
   credentials: OAuthCredentials,
 ): Promise<{ ok: true } | { ok: false; reason: "exchange_failed" }> {
-  const exchanged = await exchangeYouTubeAuthorizationCode(code, credentials);
+  const exchanged = await exchangeGoogleAuthorizationCode(platform, code, credentials);
   if (!exchanged.ok) return exchanged;
 
-  const existing = await db.integration.findFirst({ where: { channel: "youtube" } });
+  const existing = await db.integration.findFirst({ where: { channel: platform } });
   const config = parseIntegrationConfig(existing?.configJson);
   const expiresAt =
     exchanged.expiresIn && exchanged.expiresIn > 0
@@ -432,10 +455,46 @@ export async function connectYouTubeAccount(
     });
   } else {
     await db.integration.create({
-      data: { tenantId, channel: "youtube", enabled: true, configJson },
+      data: { tenantId, channel: platform, enabled: true, configJson },
     });
   }
   return { ok: true };
+}
+
+/** Exchange a YouTube authorization code at Google's token endpoint. */
+export function exchangeYouTubeAuthorizationCode(
+  code: string,
+  credentials: OAuthCredentials,
+): Promise<YouTubeTokenResult> {
+  return exchangeGoogleAuthorizationCode("youtube", code, credentials);
+}
+
+/** Persist encrypted YouTube tokens on the tenant integration row. No schema change. */
+export function connectYouTubeAccount(
+  db: TenantClient,
+  tenantId: string,
+  code: string,
+  credentials: OAuthCredentials,
+) {
+  return connectGoogleAccount(db, tenantId, "youtube", code, credentials);
+}
+
+/** Exchange a Google Ads authorization code at Google's token endpoint. */
+export function exchangeGoogleAdsAuthorizationCode(
+  code: string,
+  credentials: OAuthCredentials,
+): Promise<GoogleOAuthTokenResult> {
+  return exchangeGoogleAuthorizationCode("google_ads", code, credentials);
+}
+
+/** Persist encrypted Google Ads tokens on the tenant integration row. No schema change. */
+export function connectGoogleAdsAccount(
+  db: TenantClient,
+  tenantId: string,
+  code: string,
+  credentials: OAuthCredentials,
+) {
+  return connectGoogleAccount(db, tenantId, "google_ads", code, credentials);
 }
 
 export type PlatformConnectionStatus = "connected" | "disconnected" | "not_configured";

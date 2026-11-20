@@ -252,7 +252,7 @@ export const en: Dictionary = {
   marketing: {
     title: "Marketing",
     subtitle:
-      "On the Premium plan, the assistant signs in to Facebook, Instagram, TikTok, and YouTube and publishes on behalf of the business — only after your approval.",
+      "On the Premium plan, the assistant signs in to Facebook, Instagram, TikTok, YouTube, and Google Ads and publishes on behalf of the business — only after your approval.",
     premiumBadge: "Premium",
     premiumNote:
       "This area prepares the Premium flow: platform API keys, connect, brief, approval, scheduling, and history. Enter keys on each card — we do not invent credentials.",
@@ -272,7 +272,7 @@ export const en: Dictionary = {
       exchange_pending:
         "The OAuth code was received, but token exchange is not finished in this build. The account stays disconnected until Premium completes that step.",
       exchange_failed:
-        "YouTube did not accept the authorization code. Check the Client ID and secret, then try again.",
+        "{platform} did not accept the authorization code. Check the Client ID and secret, then try again.",
     },
     whatTitle: "What the assistant does on Premium",
     whatBody:
@@ -316,6 +316,12 @@ export const en: Dictionary = {
           clientSecretLabel: "Client Secret",
           clientSecretPlaceholder: "Google / YouTube client secret",
         },
+        google_ads: {
+          clientIdLabel: "Client ID",
+          clientIdPlaceholder: "Google Ads client ID",
+          clientSecretLabel: "Client Secret",
+          clientSecretPlaceholder: "Google Ads client secret",
+        },
       },
     },
     platforms: {
@@ -339,6 +345,11 @@ export const en: Dictionary = {
         blurb: "Sign in to the channel and publish videos on behalf of the business.",
         connect: "Connect with YouTube",
       },
+      google_ads: {
+        name: "Google Ads",
+        blurb: "Sign in to the ads account and manage campaigns on behalf of the business.",
+        connect: "Connect with Google Ads",
+      },
     },
     brief: {
       title: "Brief for the assistant",
@@ -359,7 +370,7 @@ export const en: Dictionary = {
     proposals: {
       title: "Drafts to approve",
       subtitle: "The assistant prepared the proposals. Approve, ask for changes, or reject — publishing does not start on its own.",
-      empty: "Complete the brief so drafts appear for all four platforms.",
+      empty: "Complete the brief so drafts appear for all five platforms.",
       approve: "Approve",
       revise: "Request changes",
       reject: "Reject",
@@ -397,6 +408,7 @@ export const en: Dictionary = {
       filterInstagram: "Instagram",
       filterTiktok: "TikTok",
       filterYoutube: "YouTube",
+      filterGoogleAds: "Google Ads",
     },
   },
   chat: {
@@ -445,6 +457,7 @@ export const en: Dictionary = {
     facebook: "Facebook",
     instagram: "Instagram",
     youtube: "YouTube",
+    google_ads: "Google Ads",
   },
   tones: {
     prietenos: "Friendly",

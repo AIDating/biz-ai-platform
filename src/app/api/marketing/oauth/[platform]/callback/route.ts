@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { requireUser } from "@/lib/auth";
 import {
+  connectGoogleAdsAccount,
   connectYouTubeAccount,
   isMarketingPlatform,
   isOAuthConfigured,
@@ -54,8 +55,11 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.redirect(dest);
   }
 
-  if (platform === "youtube") {
-    const connected = await connectYouTubeAccount(db, user.tenantId, code, credentials);
+  if (platform === "youtube" || platform === "google_ads") {
+    const connected =
+      platform === "youtube"
+        ? await connectYouTubeAccount(db, user.tenantId, code, credentials)
+        : await connectGoogleAdsAccount(db, user.tenantId, code, credentials);
     jar.delete(`oauth_${platform}`);
     if (!connected.ok) dest.searchParams.set("error", "exchange_failed");
     return NextResponse.redirect(dest);

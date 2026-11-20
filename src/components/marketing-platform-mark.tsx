@@ -1,10 +1,11 @@
-type Platform = "facebook" | "instagram" | "tiktok" | "youtube";
+type Platform = "facebook" | "instagram" | "tiktok" | "youtube" | "google_ads";
 
 const marks = {
   facebook: FacebookMark,
   instagram: InstagramMark,
   tiktok: TikTokMark,
   youtube: YouTubeMark,
+  google_ads: GoogleAdsMark,
 } as const;
 
 export function MarketingPlatformMark({ platform }: { platform: Platform }) {
@@ -54,6 +55,16 @@ function YouTubeMark() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
       <path d="M22.5 7.2a2.8 2.8 0 0 0-2-2C18.8 4.8 12 4.8 12 4.8s-6.8 0-8.5.4a2.8 2.8 0 0 0-2 2C1.1 8.9 1.1 12 1.1 12s0 3.1.4 4.8a2.8 2.8 0 0 0 2 2c1.7.4 8.5.4 8.5.4s6.8 0 8.5-.4a2.8 2.8 0 0 0 2-2c.4-1.7.4-4.8.4-4.8s0-3.1-.4-4.8zM9.8 15.5v-7l6.3 3.5-6.3 3.5z" />
+    </svg>
+  );
+}
+
+function GoogleAdsMark() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5">
+      <path fill="#FBBC04" d="M4.8 19.2 11.2 5.4l3 6-4.6 7.8H4.8z" />
+      <path fill="#4285F4" d="M12.8 5.4 19.6 19.2h-4.2L11.3 9.4l1.5-4z" />
+      <circle cx="7" cy="17.6" r="2.7" fill="#34A853" />
     </svg>
   );
 }

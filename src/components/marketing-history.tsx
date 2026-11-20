@@ -28,6 +28,7 @@ export function MarketingHistory({
     ["instagram", dict.filterInstagram],
     ["tiktok", dict.filterTiktok],
     ["youtube", dict.filterYoutube],
+    ["google_ads", dict.filterGoogleAds],
   ] as const;
   const [filter, setFilter] = useState<(typeof filters)[number][0]>("all");
 
