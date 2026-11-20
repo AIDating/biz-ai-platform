@@ -1,7 +1,8 @@
 import "server-only";
 import { completeOwnerTurn } from "@/lib/owner-llm";
 import type { OwnerToolResult } from "@/lib/owner-tools";
-import { formatOpenings, parseServices } from "@/lib/services";
+import { quoteServices } from "@/lib/fx-rate";
+import { formatOpenings } from "@/lib/services";
 import { tenantDb } from "@/lib/tenant-db";
 import type { ChatTurn } from "@/lib/llm/types";
 
@@ -103,6 +104,7 @@ export async function sendOwnerChatMessage(input: {
       content: row.content,
     }));
 
+  const quoted = await quoteServices(agent.servicesJson, input.locale);
   const result = await completeOwnerTurn({
     tenantId: input.tenantId,
     latest: text,
@@ -111,13 +113,14 @@ export async function sendOwnerChatMessage(input: {
       locale: input.locale,
       businessName: agent.businessName,
       description: agent.description,
-      services: parseServices(agent.servicesJson),
+      services: quoted.presented,
       hoursText: formatOpenings(openings, input.locale),
       tone: agent.tone,
       customInstructions: agent.customInstructions,
       greeting: agent.greeting,
       slotMinutes: agent.slotMinutes,
       timezone: agent.timezone,
+      fx: { ronPerGbp: quoted.quote.ronPerGbp, source: quoted.quote.source },
     },
   });
 

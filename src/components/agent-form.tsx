@@ -6,15 +6,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  formatFxLine,
+  formatRate,
+  formatServiceLine,
+  parseRonPerGbp,
+  type FxQuote,
+  type ServiceCurrency,
+} from "@/lib/fx";
+import { parseDurationValue, parsePriceValue, type ServiceItem } from "@/lib/services";
 import type { Dictionary } from "@/i18n/ro";
 
-type Row = { key: string; name: string; detail: string };
+type Row = {
+  key: string;
+  name: string;
+  duration: string;
+  price: string;
+  currency: ServiceCurrency;
+  note: string;
+};
 type Opening = { dayOfWeek: number; enabled: boolean; start: string; end: string };
 
 const initialState: ActionState = { ok: false, error: "" };
+const MAX_SERVICES = 30;
 
 export function AgentForm({
   dict,
+  locale,
   businessName,
   description,
   greeting,
@@ -24,12 +42,15 @@ export function AgentForm({
   timezone,
   enabled,
   services,
+  quote,
+  fxMode: initialFxMode,
   openings,
   tones,
   timezones,
   slotLengths,
 }: {
   dict: Dictionary;
+  locale: "ro" | "en";
   businessName: string;
   description: string;
   greeting: string;
@@ -38,7 +59,9 @@ export function AgentForm({
   slotMinutes: number;
   timezone: string;
   enabled: boolean;
-  services: { name: string; detail: string }[];
+  services: ServiceItem[];
+  quote: FxQuote;
+  fxMode: "live" | "manual";
   openings: Opening[];
   tones: { value: string; label: string }[];
   timezones: readonly string[];
@@ -46,10 +69,12 @@ export function AgentForm({
 }) {
   const [state, action, pending] = useActionState(saveAgentAction, initialState);
   const [rows, setRows] = useState<Row[]>(
-    services.length
-      ? services.map((service, index) => ({ key: `s-${index}`, ...service }))
-      : [{ key: "s-0", name: "", detail: "" }],
+    services.length ? services.map((service, index) => toRow(service, index)) : [emptyRow("s-0")],
   );
+  const [fxMode, setFxMode] = useState<"live" | "manual">(initialFxMode);
+  const [fxRate, setFxRate] = useState(formatRate(quote.ronPerGbp));
+  const manualRate = parseRonPerGbp(fxRate);
+  const preview: FxQuote = fxMode === "manual" && manualRate != null ? { ronPerGbp: manualRate, source: "manual" } : quote;
 
   return (
     <form action={action} className="space-y-8">
@@ -73,20 +98,136 @@ export function AgentForm({
             type="button"
             variant="secondary"
             size="sm"
-            onClick={() => setRows((current) => [...current, { key: `s-${Date.now()}`, name: "", detail: "" }])}
+            disabled={rows.length >= MAX_SERVICES}
+            onClick={() => setRows((current) => (current.length >= MAX_SERVICES ? current : [...current, emptyRow(`s-${Date.now()}`)]))}
           >
             {dict.agent.addService}
           </Button>
         </div>
-        {rows.map((row) => (
-          <div key={row.key} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-            <Input name="serviceName" defaultValue={row.name} placeholder={dict.agent.serviceName} maxLength={80} />
-            <Input name="serviceDetail" defaultValue={row.detail} placeholder={dict.agent.serviceDetail} maxLength={160} />
-            <Button type="button" variant="ghost" onClick={() => setRows((current) => current.filter((item) => item.key !== row.key))}>
-              {dict.agent.remove}
-            </Button>
+        <div className="rounded-2xl border bg-[#fafafa] px-4 py-3 text-sm">
+          <p className="font-medium">{dict.agent.fxTitle}</p>
+          <p className="mt-1">{formatFxLine(preview, locale, dict.fx)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{dict.agent.fxHint}</p>
+          <div className="mt-3 flex flex-wrap gap-4">
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="fxMode"
+                value="live"
+                checked={fxMode === "live"}
+                onChange={() => setFxMode("live")}
+                className="h-4 w-4 accent-[#E10600]"
+              />
+              {dict.agent.fxModeLive}
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="fxMode"
+                value="manual"
+                checked={fxMode === "manual"}
+                onChange={() => setFxMode("manual")}
+                className="h-4 w-4 accent-[#E10600]"
+              />
+              {dict.agent.fxModeManual}
+            </label>
           </div>
-        ))}
+          <label className="mt-3 block max-w-xs space-y-1">
+            <span className="text-xs text-muted-foreground">{dict.agent.fxRate}</span>
+            <Input
+              name="fxRonPerGbp"
+              type="number"
+              inputMode="decimal"
+              min="0.5"
+              max="30"
+              step="0.0001"
+              value={fxRate}
+              disabled={fxMode !== "manual"}
+              onChange={(event) => setFxRate(event.target.value)}
+            />
+          </label>
+        </div>
+        {rows.length >= MAX_SERVICES ? <p className="text-xs text-muted-foreground">{dict.agent.limit}</p> : null}
+        {rows.map((row) => {
+          const shown = formatServiceLine(
+            {
+              durationMin: parseDurationValue(row.duration),
+              price: parsePriceValue(row.price),
+              currency: row.currency,
+              note: row.note,
+            },
+            locale,
+            preview.ronPerGbp,
+          );
+          return (
+            <div key={row.key} className="space-y-2 rounded-2xl border p-3">
+              <div className="grid gap-2 lg:grid-cols-[minmax(0,1.4fr)_8rem_8rem_6.5rem_auto] lg:items-end">
+                <Field label={dict.agent.serviceName}>
+                  <Input
+                    name="serviceName"
+                    value={row.name}
+                    maxLength={80}
+                    onChange={(event) => updateRow(row.key, { name: event.target.value })}
+                  />
+                </Field>
+                <Field label={dict.agent.duration}>
+                  <Input
+                    name="serviceDuration"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={1440}
+                    step={1}
+                    value={row.duration}
+                    onChange={(event) => updateRow(row.key, { duration: event.target.value })}
+                  />
+                </Field>
+                <Field label={dict.agent.price}>
+                  <Input
+                    name="servicePrice"
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    step="0.01"
+                    value={row.price}
+                    onChange={(event) => updateRow(row.key, { price: event.target.value })}
+                  />
+                </Field>
+                <Field label={dict.agent.currency}>
+                  <select
+                    name="serviceCurrency"
+                    value={row.currency}
+                    onChange={(event) => updateRow(row.key, { currency: event.target.value === "GBP" ? "GBP" : "RON" })}
+                    className="h-11 w-full rounded-md border bg-white px-3 text-sm"
+                  >
+                    <option value="RON">RON</option>
+                    <option value="GBP">GBP</option>
+                  </select>
+                </Field>
+                <Button type="button" variant="ghost" onClick={() => setRows((current) => current.filter((item) => item.key !== row.key))}>
+                  {dict.agent.remove}
+                </Button>
+              </div>
+              {row.note ? (
+                <Field label={dict.agent.note}>
+                  <Input
+                    name="serviceNote"
+                    value={row.note}
+                    maxLength={160}
+                    onChange={(event) => updateRow(row.key, { note: event.target.value })}
+                  />
+                </Field>
+              ) : (
+                <input type="hidden" name="serviceNote" value="" />
+              )}
+              {shown ? (
+                <p className="text-xs text-muted-foreground">
+                  {dict.agent.displayPrice}: <span className="font-medium text-foreground">{shown}</span>
+                </p>
+              ) : null}
+            </div>
+          );
+        })}
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
@@ -157,6 +298,31 @@ export function AgentForm({
       </Button>
     </form>
   );
+
+  function updateRow(key: string, patch: Partial<Row>) {
+    setRows((current) => current.map((item) => (item.key === key ? { ...item, ...patch } : item)));
+  }
+}
+
+function toRow(service: ServiceItem, index: number): Row {
+  return {
+    key: `s-${index}`,
+    name: service.name,
+    duration: service.durationMin == null ? "" : String(service.durationMin),
+    price: service.price == null ? "" : formatInputPrice(service.price),
+    currency: service.currency,
+    note: service.note,
+  };
+}
+
+function emptyRow(key: string): Row {
+  return { key, name: "", duration: "", price: "", currency: "RON", note: "" };
+}
+
+function formatInputPrice(value: number) {
+  const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
+  if (Math.abs(rounded - Math.round(rounded)) < 1e-9) return String(Math.round(rounded));
+  return rounded.toFixed(2);
 }
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {

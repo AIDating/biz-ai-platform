@@ -8,6 +8,7 @@ for (const line of readFileSync(new URL("../.env", import.meta.url), "utf8").spl
   process.env[match[1]] = match[2].replace(/^"|"$/g, "");
 }
 import { hashPassword } from "../src/lib/password";
+import { serializeServices } from "../src/lib/services";
 import { addZonedDays, startOfZonedDay, zonedParts, zonedWallTime, zonedWeekday } from "../src/lib/time";
 
 const prisma = new PrismaClient();
@@ -57,11 +58,11 @@ async function main() {
         create: {
           businessName: "Salon Iris",
           description: "Salon de înfrumusețare în Cluj. Tuns, vopsit, coafat și manichiură, cu programare.",
-          servicesJson: JSON.stringify([
-            { name: "Tuns femei", detail: "45 min · 120 lei" },
-            { name: "Vopsit", detail: "90 min · de la 250 lei" },
-            { name: "Coafat ocazie", detail: "60 min · 180 lei" },
-            { name: "Manichiură", detail: "45 min · 80 lei" },
+          servicesJson: serializeServices([
+            { name: "Tuns femei", detail: "", durationMin: 45, price: 120, currency: "RON", note: "" },
+            { name: "Vopsit", detail: "", durationMin: 90, price: 250, currency: "RON", note: "de la" },
+            { name: "Coafat ocazie", detail: "", durationMin: 60, price: 180, currency: "RON", note: "" },
+            { name: "Manichiură", detail: "", durationMin: 45, price: 80, currency: "RON", note: "" },
           ]),
           tone: "prietenos",
           customInstructions: "Întreabă dacă vopsitul este pentru prima dată. Nu promite reduceri.",
@@ -202,9 +203,9 @@ async function main() {
         create: {
           businessName: "Service Auto Radu",
           description: "Service auto în Brașov. Revizii, frâne și diagnoză.",
-          servicesJson: JSON.stringify([
-            { name: "Revizie", detail: "60 min" },
-            { name: "Diagnoză", detail: "45 min" },
+          servicesJson: serializeServices([
+            { name: "Revizie", detail: "", durationMin: 60, price: null, currency: "RON", note: "" },
+            { name: "Diagnoză", detail: "", durationMin: 45, price: null, currency: "RON", note: "" },
           ]),
           greeting: "Bună! Sunt recepția Service Auto Radu. Cu ce vă putem ajuta?",
           enabled: true,

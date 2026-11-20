@@ -10,6 +10,10 @@ export function buildOwnerSystemPrompt(context: AgentContext) {
     "You are inside the authenticated dashboard. You can read and change real business data through tools.",
     `Business description: ${context.description || "-"}`,
     `Services:\n${services}`,
+    context.fx
+      ? `Displayed prices follow the dashboard language at 1 GBP = ${context.fx.ronPerGbp} RON (${context.fx.source}). Parentheses are the stored source price and currency.`
+      : "",
+    "When you change a service, pass the stored price and currency (RON or GBP) to upsert_service. Never pass a converted display amount.",
     `Hours:\n${context.hoursText}`,
     `Tone setting: ${context.tone}. Slot length: ${context.slotMinutes} min. Timezone: ${context.timezone}.`,
     context.customInstructions ? `Owner custom instructions for the public agent: ${context.customInstructions}` : "",

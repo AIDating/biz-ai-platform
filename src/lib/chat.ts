@@ -4,7 +4,8 @@ import { ro } from "@/i18n/ro";
 import { getLlm, llmMode } from "@/lib/llm";
 import { LlmError } from "@/lib/llm/types";
 import type { AgentContext } from "@/lib/llm/types";
-import { formatOpenings, parseServices } from "@/lib/services";
+import { quoteServices } from "@/lib/fx-rate";
+import { formatOpenings } from "@/lib/services";
 import { tenantDb } from "@/lib/tenant-db";
 import { executeTool, saveLeadFromVisitor } from "@/lib/tools";
 import { bookAvailableSlot, BookingConflictError, SlotUnavailableError } from "@/lib/booking";
@@ -171,17 +172,19 @@ export async function handleInbound(input: HandleInboundInput) {
     return finish(dict.chat.emptyPrompt, {});
   }
 
+  const quoted = await quoteServices(agent.servicesJson, locale);
   const context: AgentContext = {
     locale,
     businessName: agent.businessName,
     description: agent.description,
-    services: parseServices(agent.servicesJson),
+    services: quoted.presented,
     hoursText: formatOpenings(openings, locale),
     tone: agent.tone,
     customInstructions: agent.customInstructions,
     greeting: agent.greeting,
     slotMinutes: agent.slotMinutes,
     timezone: agent.timezone,
+    fx: { ronPerGbp: quoted.quote.ronPerGbp, source: quoted.quote.source },
   };
   const history = await db.message.findMany({
     where: { conversationId: conversation.id },

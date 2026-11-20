@@ -13,7 +13,8 @@ import {
 } from "@/lib/booking";
 import { tenantDb } from "@/lib/tenant-db";
 import { basePrisma } from "@/lib/db";
-import { serializeServices, TONE_KEYS, SLOT_LENGTHS, TIMEZONES } from "@/lib/services";
+import { fxSettingsFromForm } from "@/lib/fx";
+import { serializeServices, servicesFromForm, TONE_KEYS, SLOT_LENGTHS, TIMEZONES } from "@/lib/services";
 import { timeToMinutes } from "@/lib/time";
 import { agentFormSchema, appointmentSchema, hasReachableContact, leadStatusSchema } from "@/lib/validators";
 
@@ -53,11 +54,22 @@ export async function setLeadStatusAction(formData: FormData) {
 export async function saveAgentAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireUser();
   const dict = await getDictionary();
-  const names = formData.getAll("serviceName").map(String);
-  const details = formData.getAll("serviceDetail").map(String);
-  const services = names
-    .map((name, index) => ({ name, detail: details[index] ?? "" }))
-    .filter((service) => service.name.trim());
+  const built = servicesFromForm({
+    names: formData.getAll("serviceName").map(String),
+    durations: formData.getAll("serviceDuration").map(String),
+    prices: formData.getAll("servicePrice").map(String),
+    currencies: formData.getAll("serviceCurrency").map(String),
+    notes: formData.getAll("serviceNote").map(String),
+  });
+  const fx = fxSettingsFromForm(String(formData.get("fxMode") ?? "live"), String(formData.get("fxRonPerGbp") ?? ""));
+  if (!built.ok || !fx.ok) return { ok: false, error: dict.agent.invalid };
+  const services = built.services.map(({ name, durationMin, price, currency, note }) => ({
+    name,
+    durationMin,
+    price,
+    currency,
+    note,
+  }));
   const openDays = new Set(formData.getAll("openDays").map(String));
   const openings = [0, 1, 2, 3, 4, 5, 6].map((day) => ({
     dayOfWeek: day,
@@ -103,7 +115,7 @@ export async function saveAgentAction(_prev: ActionState, formData: FormData): P
       slotMinutes: parsed.data.slotMinutes,
       timezone: parsed.data.timezone,
       enabled: parsed.data.enabled,
-      servicesJson: serializeServices(parsed.data.services),
+      servicesJson: serializeServices(parsed.data.services, fx.settings),
     },
   });
   await db.availabilityRule.deleteMany({ where: {} });

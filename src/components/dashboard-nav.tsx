@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, CalendarDays, Code2, LayoutDashboard, Megaphone, MessagesSquare, Users } from "lucide-react";
+import { CalendarDays, Code2, LayoutDashboard, Megaphone, MessagesSquare, ShoppingBag, Users } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const ICONS = {
@@ -10,7 +10,7 @@ const ICONS = {
   customers: Users,
   conversations: MessagesSquare,
   appointments: CalendarDays,
-  agent: Bot,
+  agent: ShoppingBag,
   widget: Code2,
   marketing: Megaphone,
 } as const;

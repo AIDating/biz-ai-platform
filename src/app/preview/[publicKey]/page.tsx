@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import { WidgetLoader } from "@/components/widget-loader";
 import { dictionaryFor, getLocale, type Locale } from "@/i18n";
-import { formatOpenings, parseServices } from "@/lib/services";
+import { formatFxLine, formatServiceLine } from "@/lib/fx";
+import { quoteServices } from "@/lib/fx-rate";
+import { formatOpenings } from "@/lib/services";
 import { tenantDb } from "@/lib/tenant-db";
 import { findTenantByPublicKey } from "@/lib/tenants";
 
@@ -38,7 +40,8 @@ async function Preview({
   const db = tenantDb(tenant.id);
   const agent = await db.agentProfile.findFirst();
   const openings = await db.availabilityRule.findMany();
-  const services = parseServices(agent?.servicesJson ?? "[]");
+  const quoted = await quoteServices(agent?.servicesJson ?? "[]", locale);
+  const services = quoted.presented;
 
   return (
     <div className="min-h-screen bg-white">
@@ -55,13 +58,19 @@ async function Preview({
           <p className="text-lg">{agent?.description || dict.preview.intro}</p>
           <p className="mt-4 text-sm text-muted-foreground">{dict.preview.intro}</p>
           <h2 className="mt-8 font-display text-3xl">{dict.preview.services}</h2>
+          {services.some((service) => service.price != null) ? (
+            <p className="mt-2 text-sm text-muted-foreground">{formatFxLine(quoted.quote, locale, dict.fx)}</p>
+          ) : null}
           <ul className="mt-3 space-y-2">
-            {services.map((service) => (
-              <li key={service.name} className="rounded-2xl border bg-white px-4 py-3">
-                <p className="font-medium">{service.name}</p>
-                {service.detail ? <p className="text-sm text-muted-foreground">{service.detail}</p> : null}
-              </li>
-            ))}
+            {services.map((service) => {
+              const line = formatServiceLine(service, locale, quoted.quote.ronPerGbp);
+              return (
+                <li key={service.name} className="rounded-2xl border bg-white px-4 py-3">
+                  <p className="font-medium">{service.name}</p>
+                  {line ? <p className="text-sm text-muted-foreground">{line}</p> : null}
+                </li>
+              );
+            })}
           </ul>
         </div>
         <aside className="h-fit border-t-2 border-t-[#E10600] border border-[#ececec] bg-white p-5">
@@ -69,7 +78,7 @@ async function Preview({
           <pre className="mt-3 whitespace-pre-wrap font-sans text-sm">{formatOpenings(openings, locale)}</pre>
         </aside>
       </main>
-      <WidgetLoader publicKey={publicKey} />
+      <WidgetLoader publicKey={publicKey} locale={locale} />
     </div>
   );
 }
