@@ -6,14 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  formatFxLine,
-  formatRate,
-  formatServiceLine,
-  parseRonPerGbp,
-  type FxQuote,
-  type ServiceCurrency,
-} from "@/lib/fx";
+import { formatServiceLine, type FxQuote, type ServiceCurrency } from "@/lib/fx";
 import { parseDurationValue, parsePriceValue, type ServiceItem } from "@/lib/services";
 import type { Dictionary } from "@/i18n/ro";
 
@@ -43,7 +36,6 @@ export function AgentForm({
   enabled,
   services,
   quote,
-  fxMode: initialFxMode,
   openings,
   tones,
   timezones,
@@ -61,7 +53,6 @@ export function AgentForm({
   enabled: boolean;
   services: ServiceItem[];
   quote: FxQuote;
-  fxMode: "live" | "manual";
   openings: Opening[];
   tones: { value: string; label: string }[];
   timezones: readonly string[];
@@ -71,10 +62,6 @@ export function AgentForm({
   const [rows, setRows] = useState<Row[]>(
     services.length ? services.map((service, index) => toRow(service, index)) : [emptyRow("s-0")],
   );
-  const [fxMode, setFxMode] = useState<"live" | "manual">(initialFxMode);
-  const [fxRate, setFxRate] = useState(formatRate(quote.ronPerGbp));
-  const manualRate = parseRonPerGbp(fxRate);
-  const preview: FxQuote = fxMode === "manual" && manualRate != null ? { ronPerGbp: manualRate, source: "manual" } : quote;
 
   return (
     <form action={action} className="space-y-8">
@@ -104,49 +91,6 @@ export function AgentForm({
             {dict.agent.addService}
           </Button>
         </div>
-        <div className="rounded-2xl border bg-[#fafafa] px-4 py-3 text-sm">
-          <p className="font-medium">{dict.agent.fxTitle}</p>
-          <p className="mt-1">{formatFxLine(preview, locale, dict.fx)}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{dict.agent.fxHint}</p>
-          <div className="mt-3 flex flex-wrap gap-4">
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="fxMode"
-                value="live"
-                checked={fxMode === "live"}
-                onChange={() => setFxMode("live")}
-                className="h-4 w-4 accent-[#E10600]"
-              />
-              {dict.agent.fxModeLive}
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="fxMode"
-                value="manual"
-                checked={fxMode === "manual"}
-                onChange={() => setFxMode("manual")}
-                className="h-4 w-4 accent-[#E10600]"
-              />
-              {dict.agent.fxModeManual}
-            </label>
-          </div>
-          <label className="mt-3 block max-w-xs space-y-1">
-            <span className="text-xs text-muted-foreground">{dict.agent.fxRate}</span>
-            <Input
-              name="fxRonPerGbp"
-              type="number"
-              inputMode="decimal"
-              min="0.5"
-              max="30"
-              step="0.0001"
-              value={fxRate}
-              disabled={fxMode !== "manual"}
-              onChange={(event) => setFxRate(event.target.value)}
-            />
-          </label>
-        </div>
         {rows.length >= MAX_SERVICES ? <p className="text-xs text-muted-foreground">{dict.agent.limit}</p> : null}
         {rows.map((row) => {
           const shown = formatServiceLine(
@@ -157,7 +101,7 @@ export function AgentForm({
               note: row.note,
             },
             locale,
-            preview.ronPerGbp,
+            quote.ronPerGbp,
           );
           return (
             <div key={row.key} className="space-y-2 rounded-2xl border p-3">

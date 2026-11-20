@@ -13,8 +13,8 @@ import {
 } from "@/lib/booking";
 import { tenantDb } from "@/lib/tenant-db";
 import { basePrisma } from "@/lib/db";
-import { fxSettingsFromForm } from "@/lib/fx";
-import { serializeServices, servicesFromForm, TONE_KEYS, SLOT_LENGTHS, TIMEZONES } from "@/lib/services";
+import { fxSettingsForSave } from "@/lib/fx";
+import { parseFxSettings, serializeServices, servicesFromForm, TONE_KEYS, SLOT_LENGTHS, TIMEZONES } from "@/lib/services";
 import { timeToMinutes } from "@/lib/time";
 import { agentFormSchema, appointmentSchema, hasReachableContact, leadStatusSchema } from "@/lib/validators";
 
@@ -61,8 +61,16 @@ export async function saveAgentAction(_prev: ActionState, formData: FormData): P
     currencies: formData.getAll("serviceCurrency").map(String),
     notes: formData.getAll("serviceNote").map(String),
   });
-  const fx = fxSettingsFromForm(String(formData.get("fxMode") ?? "live"), String(formData.get("fxRonPerGbp") ?? ""));
-  if (!built.ok || !fx.ok) return { ok: false, error: dict.agent.invalid };
+  if (!built.ok) return { ok: false, error: dict.agent.invalid };
+  const db = tenantDb(user.tenantId);
+  const existing = await db.agentProfile.findFirst();
+  const submittedMode = formData.get("fxMode");
+  const fx = fxSettingsForSave(
+    submittedMode == null ? null : String(submittedMode),
+    String(formData.get("fxRonPerGbp") ?? ""),
+    parseFxSettings(existing?.servicesJson ?? "[]"),
+  );
+  if (!fx.ok) return { ok: false, error: dict.agent.invalid };
   const services = built.services.map(({ name, durationMin, price, currency, note }) => ({
     name,
     durationMin,
@@ -103,7 +111,6 @@ export async function saveAgentAction(_prev: ActionState, formData: FormData): P
     return { ok: false, error: dict.agent.invalid };
   }
 
-  const db = tenantDb(user.tenantId);
   await db.agentProfile.updateMany({
     where: {},
     data: {

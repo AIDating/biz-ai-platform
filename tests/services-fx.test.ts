@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { FALLBACK_RON_PER_GBP, formatServiceLine } from "@/lib/fx";
+import { FALLBACK_RON_PER_GBP, formatServiceLine, fxSettingsForSave } from "@/lib/fx";
 import { clearFxCache, resolveFxQuote } from "@/lib/fx-rate";
 import { parseFxSettings, parseServices, serializeServices, servicesFromForm, upsertServiceList } from "@/lib/services";
 
@@ -206,6 +206,21 @@ describe("resolveFxQuote", () => {
     };
     const quote = await resolveFxQuote(null, { fetchImpl });
     expect(quote).toEqual({ ronPerGbp: FALLBACK_RON_PER_GBP, source: "fallback" });
+  });
+});
+
+describe("fxSettingsForSave", () => {
+  it("keeps the stored rate when the form does not post exchange fields", () => {
+    const stored = { mode: "manual" as const, ronPerGbp: 6.1 };
+    expect(fxSettingsForSave(null, "", stored)).toEqual({ ok: true, settings: stored });
+    expect(fxSettingsForSave(null, "", { mode: "live", ronPerGbp: null })).toEqual({
+      ok: true,
+      settings: { mode: "live", ronPerGbp: null },
+    });
+  });
+
+  it("rejects a posted fixed rate that is not a number", () => {
+    expect(fxSettingsForSave("manual", "", { mode: "live", ronPerGbp: null }).ok).toBe(false);
   });
 });
 

@@ -55,7 +55,6 @@ async function AgentSettings() {
           enabled={agent.enabled}
           services={quoted.services}
           quote={quoted.quote}
-          fxMode={quoted.settings.mode}
           openings={openings}
           tones={TONE_KEYS.map((tone) => ({ value: tone, label: dict.tones[tone] }))}
           timezones={TIMEZONES}
