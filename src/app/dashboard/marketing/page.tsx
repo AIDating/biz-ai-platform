@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { MarketingBriefForm } from "@/components/marketing-brief-form";
 import { MarketingHistory, type HistoryItem } from "@/components/marketing-history";
@@ -154,6 +155,11 @@ async function MarketingContent({
           <Badge tone="warn">{copy.premiumBadge}</Badge>
         </div>
         <p className="mt-2 max-w-2xl text-muted-foreground">{copy.subtitle}</p>
+        <div className="mt-4">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/dashboard/analytics">{copy.analyticsLink}</Link>
+          </Button>
+        </div>
       </div>
 
       <p className="max-w-3xl border-l-2 border-[#e10600] px-4 py-1 text-sm text-muted-foreground">{copy.premiumNote}</p>

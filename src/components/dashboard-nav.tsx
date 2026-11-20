@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Code2, LayoutDashboard, Megaphone, MessagesSquare, ShoppingBag, Users } from "lucide-react";
+import { BarChart3, CalendarDays, Code2, LayoutDashboard, Megaphone, MessagesSquare, ShoppingBag, Users } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const ICONS = {
@@ -13,6 +13,7 @@ const ICONS = {
   agent: ShoppingBag,
   widget: Code2,
   marketing: Megaphone,
+  analytics: BarChart3,
 } as const;
 
 export function DashboardNav({
