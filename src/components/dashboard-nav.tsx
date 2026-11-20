@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, CalendarDays, Code2, LayoutDashboard, MessagesSquare, Users } from "lucide-react";
+import { Bot, CalendarDays, Code2, LayoutDashboard, Megaphone, MessagesSquare, Users } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const ICONS = {
@@ -12,12 +12,13 @@ const ICONS = {
   appointments: CalendarDays,
   agent: Bot,
   widget: Code2,
+  marketing: Megaphone,
 } as const;
 
 export function DashboardNav({
   items,
 }: {
-  items: { href: string; label: string; icon: keyof typeof ICONS }[];
+  items: { href: string; label: string; icon: keyof typeof ICONS; badge?: string }[];
 }) {
   const pathname = usePathname();
   return (
@@ -36,8 +37,13 @@ export function DashboardNav({
                 : "border-transparent text-[#6d6d6d] hover:text-foreground",
             )}
           >
-            <Icon className="h-4 w-4" />
-            {item.label}
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="min-w-0 flex-1">{item.label}</span>
+            {item.badge ? (
+              <span className="rounded-sm bg-white px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-[#e10600] uppercase ring-1 ring-[#e10600]">
+                {item.badge}
+              </span>
+            ) : null}
           </Link>
         );
       })}
