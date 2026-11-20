@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { handleInbound } from "@/lib/chat";
+import { formatFxLine, formatServiceLine, serviceMoney } from "@/lib/fx";
+import { quoteServices } from "@/lib/fx-rate";
+import { dictionaryFor, type Locale } from "@/i18n";
 import { llmMode } from "@/lib/llm";
-import { parseServices } from "@/lib/services";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { tenantDb } from "@/lib/tenant-db";
 import { findTenantByPublicKey } from "@/lib/tenants";
@@ -20,7 +22,9 @@ export async function GET(request: Request, context: RouteContext) {
   const agent = await db.agentProfile.findFirst();
   if (!agent) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  const visitorKey = new URL(request.url).searchParams.get("visitorKey") ?? "";
+  const url = new URL(request.url);
+  const locale: Locale = url.searchParams.get("locale") === "en" ? "en" : "ro";
+  const visitorKey = url.searchParams.get("visitorKey") ?? "";
   let messages: { id: string; role: string; content: string; createdAt: string }[] = [];
   let visitor = { name: "", phone: "", email: "" };
   if (/^[A-Za-z0-9_-]{8,80}$/.test(visitorKey)) {
@@ -46,13 +50,21 @@ export async function GET(request: Request, context: RouteContext) {
     }
   }
 
+  const quoted = await quoteServices(agent.servicesJson, locale);
+  const dict = dictionaryFor(locale);
+  const services = quoted.services.map((service) => ({
+    name: service.name,
+    priceLabel: serviceMoney(service, locale, quoted.quote.ronPerGbp).label,
+    label: formatServiceLine(service, locale, quoted.quote.ronPerGbp),
+  }));
   return NextResponse.json({
     config: {
       businessName: agent.businessName,
       greeting: agent.greeting,
       enabled: agent.enabled,
       mock: llmMode().id === "mock",
-      services: parseServices(agent.servicesJson).map((service) => ({ name: service.name })),
+      services,
+      fxCaption: services.some((service) => service.priceLabel) ? formatFxLine(quoted.quote, locale, dict.fx) : "",
     },
     messages,
     visitor,

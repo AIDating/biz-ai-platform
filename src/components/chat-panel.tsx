@@ -27,7 +27,8 @@ export function ChatPanel({
   const [greeting, setGreeting] = useState("");
   const [offline, setOffline] = useState(false);
   const [mock, setMock] = useState(false);
-  const [services, setServices] = useState<{ name: string }[]>([]);
+  const [services, setServices] = useState<{ name: string; priceLabel?: string; label?: string }[]>([]);
+  const [fxCaption, setFxCaption] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [visitor, setVisitor] = useState<Visitor>({ name: "", phone: "", email: "" });
@@ -45,7 +46,7 @@ export function ChatPanel({
       localStorage.setItem(storageKey, key);
     }
     visitorKey.current = key;
-    void fetch(`/api/widget/${publicKey}?visitorKey=${encodeURIComponent(key)}`)
+    void fetch(`/api/widget/${publicKey}?visitorKey=${encodeURIComponent(key)}&locale=${locale}`)
       .then(async (response) => {
         if (!response.ok) {
           setMissing(true);
@@ -57,12 +58,13 @@ export function ChatPanel({
         setOffline(!data.config.enabled);
         setMock(Boolean(data.config.mock));
         setServices(data.config.services ?? []);
+        setFxCaption(data.config.fxCaption ?? "");
         setMessages(data.messages ?? []);
         setVisitor(data.visitor ?? { name: "", phone: "", email: "" });
       })
       .catch(() => setMissing(true))
       .finally(() => setReady(true));
-  }, [publicKey]);
+  }, [publicKey, locale]);
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight });
@@ -200,7 +202,7 @@ export function ChatPanel({
                 <option value="">{copy.service}</option>
                 {services.map((service) => (
                   <option key={service.name} value={service.name}>
-                    {service.name}
+                    {service.priceLabel ? `${service.name} · ${service.priceLabel}` : service.name}
                   </option>
                 ))}
               </select>
@@ -214,6 +216,24 @@ export function ChatPanel({
         {pending ? <p className="text-xs text-muted-foreground">{copy.desk}…</p> : null}
       </div>
       {error ? <p className="px-3 text-xs text-destructive">{error}</p> : null}
+      {services.length > 0 ? (
+        <div className="border-t px-3 py-2">
+          <div className="flex max-h-24 flex-wrap gap-1.5 overflow-y-auto">
+            {services.map((service) => (
+              <button
+                key={service.name}
+                type="button"
+                disabled={pending}
+                onClick={() => void send({ message: service.name })}
+                className="rounded-full border px-2.5 py-1 text-xs hover:border-[#E10600] disabled:opacity-50"
+              >
+                {service.priceLabel ? `${service.name} · ${service.priceLabel}` : service.name}
+              </button>
+            ))}
+          </div>
+          {fxCaption ? <p className="mt-1 text-[11px] text-muted-foreground">{fxCaption}</p> : null}
+        </div>
+      ) : null}
       <form
         className="flex gap-2 border-t p-3"
         onSubmit={(event) => {

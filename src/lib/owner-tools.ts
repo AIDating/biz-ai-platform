@@ -16,7 +16,10 @@ import {
   serializePayload,
 } from "@/lib/marketing";
 import { MARKETING_PLATFORMS } from "@/lib/marketing-oauth";
-import { parseServices, serializeServices } from "@/lib/services";
+import { formatFxLine, formatServiceLine } from "@/lib/fx";
+import { quoteServices } from "@/lib/fx-rate";
+import { dictionaryFor } from "@/i18n";
+import { parseFxSettings, serializeServices, upsertServiceList } from "@/lib/services";
 import { describeSlot, getAvailableSlots } from "@/lib/slots";
 import { tenantDb } from "@/lib/tenant-db";
 import { formatWhen } from "@/lib/time";
@@ -155,7 +158,8 @@ export const OWNER_TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "list_services",
-      description: "List business services and details (price/duration text).",
+      description:
+        "List services with duration, stored price, stored currency, and the price shown in the dashboard language. Parentheses in display text are the stored source amount.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
     },
   },
@@ -163,10 +167,18 @@ export const OWNER_TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "upsert_service",
-      description: "Add or update a service by name.",
+      description:
+        "Add or update a service by name. price and currency are the stored source values (RON or GBP), never a converted display amount. durationMin is minutes. Legacy detail is parsed only when price, currency, durationMin, and note are omitted.",
       parameters: {
         type: "object",
-        properties: { name: { type: "string" }, detail: { type: "string" } },
+        properties: {
+          name: { type: "string" },
+          durationMin: { type: "number" },
+          price: { type: "number" },
+          currency: { type: "string" },
+          note: { type: "string" },
+          detail: { type: "string" },
+        },
         required: ["name"],
         additionalProperties: false,
       },
@@ -214,7 +226,8 @@ export const OWNER_TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "list_marketing",
-      description: "Show marketing platforms, brief, and recent posts/drafts.",
+      description:
+        "Show facebook, instagram, tiktok, youtube, and google_ads with hasKeys, source, and connection status, plus the brief and recent posts.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
     },
   },
@@ -235,7 +248,7 @@ export const OWNER_TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "create_marketing_draft",
-      description: "Create a pending draft post for facebook, instagram, or tiktok.",
+      description: "Create a pending draft post for facebook, instagram, tiktok, youtube, or google_ads.",
       parameters: {
         type: "object",
         properties: { channel: { type: "string" }, text: { type: "string" }, title: { type: "string" } },
@@ -531,35 +544,85 @@ export async function executeOwnerTool(
         }
       }
       case "list_services": {
-        const services = parseServices(agent?.servicesJson ?? "[]");
+        const quoted = await quoteServices(agent?.servicesJson ?? "[]", locale);
+        const rows = quoted.services.map((service) => ({
+          name: service.name,
+          durationMin: service.durationMin,
+          price: service.price,
+          currency: service.currency,
+          note: service.note,
+          display: formatServiceLine(service, locale, quoted.quote.ronPerGbp),
+        }));
+        const caption = formatFxLine(quoted.quote, locale, dictionaryFor(locale).fx);
+        const lines = rows.map((service) => (service.display ? `${service.name} — ${service.display}` : service.name)).join("; ");
         return {
           ok: true,
-          summary: t(locale, `Servicii: ${services.length}.`, `Services: ${services.length}.`),
+          summary: lines
+            ? t(locale, `Servicii: ${lines}. ${caption}.`, `Services: ${lines}. ${caption}.`)
+            : t(locale, "Niciun serviciu.", "No services."),
           href: "/dashboard/agent",
-          data: services,
+          data: {
+            exchangeRate: {
+              ronPerGbp: quoted.quote.ronPerGbp,
+              source: quoted.quote.source,
+              provider: quoted.quote.provider ?? null,
+            },
+            services: rows,
+          },
         };
       }
       case "upsert_service": {
-        const name = clean(call.arguments.name, 80);
-        const detail = clean(call.arguments.detail, 160);
-        if (!name) return { ok: false, summary: t(locale, "Numele serviciului lipsește.", "Service name missing."), error: "required" };
-        const services = parseServices(agent?.servicesJson ?? "[]");
-        const index = services.findIndex((item) => item.name.toLowerCase() === name.toLowerCase());
-        if (index >= 0) services[index] = { name, detail: detail || services[index].detail };
-        else services.push({ name, detail });
-        await db.agentProfile.updateMany({ where: {}, data: { servicesJson: serializeServices(services) } });
+        const quoted = await quoteServices(agent?.servicesJson ?? "[]", locale);
+        const updated = upsertServiceList(quoted.services, {
+          name: clean(call.arguments.name, 80),
+          durationMin: call.arguments.durationMin,
+          price: call.arguments.price,
+          currency: call.arguments.currency,
+          note: call.arguments.note,
+          detail: call.arguments.detail,
+        });
+        if (!updated.ok) {
+          const summary =
+            updated.error === "limit"
+              ? t(locale, "Sunt deja 30 de servicii.", "There are already 30 services.")
+              : updated.error === "invalid"
+                ? t(locale, "Durata, prețul sau moneda nu este validă.", "Duration, price, or currency is invalid.")
+                : t(locale, "Numele serviciului lipsește.", "Service name missing.");
+          return { ok: false, summary, error: updated.error };
+        }
+        await db.agentProfile.updateMany({
+          where: {},
+          data: { servicesJson: serializeServices(updated.services, parseFxSettings(agent?.servicesJson ?? "[]")) },
+        });
+        const savedName = clean(call.arguments.name, 80).toLowerCase();
+        const saved = updated.services.find((item) => item.name.toLowerCase() === savedName);
+        const display = saved ? formatServiceLine(saved, locale, quoted.quote.ronPerGbp) : "";
         return {
           ok: true,
-          summary: t(locale, `Serviciu salvat: ${name}.`, `Service saved: ${name}.`),
+          summary: display
+            ? t(locale, `Serviciu salvat: ${saved?.name} — ${display}.`, `Service saved: ${saved?.name} — ${display}.`)
+            : t(locale, `Serviciu salvat: ${saved?.name ?? ""}.`, `Service saved: ${saved?.name ?? ""}.`),
           href: "/dashboard/agent",
+          data: saved
+            ? {
+                name: saved.name,
+                durationMin: saved.durationMin,
+                price: saved.price,
+                currency: saved.currency,
+                note: saved.note,
+                display,
+              }
+            : undefined,
         };
       }
       case "remove_service": {
         const name = clean(call.arguments.name, 80);
-        const services = parseServices(agent?.servicesJson ?? "[]").filter(
-          (item) => item.name.toLowerCase() !== name.toLowerCase(),
-        );
-        await db.agentProfile.updateMany({ where: {}, data: { servicesJson: serializeServices(services) } });
+        const quoted = await quoteServices(agent?.servicesJson ?? "[]", locale);
+        const services = quoted.services.filter((item) => item.name.toLowerCase() !== name.toLowerCase());
+        await db.agentProfile.updateMany({
+          where: {},
+          data: { servicesJson: serializeServices(services, quoted.settings) },
+        });
         return {
           ok: true,
           summary: t(locale, `Serviciu eliminat: ${name}.`, `Service removed: ${name}.`),

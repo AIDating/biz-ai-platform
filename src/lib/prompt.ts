@@ -19,11 +19,16 @@ export function buildSystemPrompt(context: AgentContext) {
   const services = context.services.length
     ? context.services.map((service) => `- ${service.name}${service.detail ? ` (${service.detail})` : ""}`).join("\n")
     : "-";
+  const displayCurrency = context.locale === "en" ? "GBP" : "RON";
+  const fx = context.fx
+    ? `Displayed prices use ${displayCurrency} at 1 GBP = ${context.fx.ronPerGbp} RON (${context.fx.source}). Parentheses show the stored source price. Never invent a price or replace the stored amount with the converted figure.`
+    : `Show service prices in ${displayCurrency} when a price is listed.`;
   return [
     `You are the virtual receptionist for ${context.businessName}.`,
     `Speak ${tone}. Reply in the visitor's language. If they write Romanian, reply in Romanian.`,
     `Description: ${context.description || "-"}`,
     `Services:\n${services}`,
+    fx,
     `Opening hours:\n${context.hoursText}`,
     `Appointment length: ${context.slotMinutes} minutes. Timezone: ${context.timezone}.`,
     context.customInstructions ? `Owner instructions: ${context.customInstructions}` : "",

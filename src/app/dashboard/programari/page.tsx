@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { CalendarBoard } from "@/components/calendar-board";
 import { getDictionary, getLocale } from "@/i18n";
+import { formatFxLine } from "@/lib/fx";
 import { buildWeek } from "@/lib/calendar";
 import { requireUser } from "@/lib/auth";
 
@@ -28,6 +29,9 @@ async function Appointments({ searchParams }: { searchParams: Promise<{ week?: s
         <p className="mt-2 text-muted-foreground">{dict.appointments.subtitle}</p>
       </div>
       {hasSlots ? null : <p className="text-sm text-muted-foreground">{dict.appointments.emptyWeek}</p>}
+      {week.services.some((service) => service.priceLabel) ? (
+        <p className="text-sm text-muted-foreground">{formatFxLine(week.fx, locale, dict.fx)}</p>
+      ) : null}
       <CalendarBoard
         days={week.days}
         prevWeek={week.prevWeek}

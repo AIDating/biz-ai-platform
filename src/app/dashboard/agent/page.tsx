@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import { AgentForm } from "@/components/agent-form";
-import { getDictionary } from "@/i18n";
+import { getDictionary, getLocale } from "@/i18n";
 import { requireUser } from "@/lib/auth";
-import { parseServices, SLOT_LENGTHS, TIMEZONES, TONE_KEYS } from "@/lib/services";
+import { quoteServices } from "@/lib/fx-rate";
+import { SLOT_LENGTHS, TIMEZONES, TONE_KEYS } from "@/lib/services";
 import { tenantDb } from "@/lib/tenant-db";
 import { minutesToTime } from "@/lib/time";
 
@@ -18,11 +19,12 @@ export default function AgentPage() {
 
 async function AgentSettings() {
   const user = await requireUser();
-  const dict = await getDictionary();
+  const [dict, locale] = await Promise.all([getDictionary(), getLocale()]);
   const db = tenantDb(user.tenantId);
   const agent = await db.agentProfile.findFirst();
   const rules = await db.availabilityRule.findMany();
   if (!agent) return null;
+  const quoted = await quoteServices(agent.servicesJson, locale);
   const openings = [0, 1, 2, 3, 4, 5, 6].map((day) => {
     const rule = rules.find((item) => item.dayOfWeek === day);
     return {
@@ -42,6 +44,7 @@ async function AgentSettings() {
       <div className="rounded-3xl border bg-card p-5 sm:p-6">
         <AgentForm
           dict={dict}
+          locale={locale}
           businessName={agent.businessName}
           description={agent.description}
           greeting={agent.greeting}
@@ -50,7 +53,8 @@ async function AgentSettings() {
           slotMinutes={agent.slotMinutes}
           timezone={agent.timezone}
           enabled={agent.enabled}
-          services={parseServices(agent.servicesJson)}
+          services={quoted.services}
+          quote={quoted.quote}
           openings={openings}
           tones={TONE_KEYS.map((tone) => ({ value: tone, label: dict.tones[tone] }))}
           timezones={TIMEZONES}

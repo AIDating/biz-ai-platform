@@ -32,7 +32,7 @@ export function CalendarBoard({
   prevWeek: string;
   nextWeek: string;
   weekStart: string;
-  services: { name: string; detail: string }[];
+  services: { name: string; priceLabel: string; display: string }[];
   dict: Dictionary;
 }) {
   const [createSlot, setCreateSlot] = useState<{ startsAt: string; timeLabel: string; day: string } | null>(null);
@@ -170,13 +170,14 @@ function BookingForm({
   mode: "create" | "edit";
   id?: string;
   startsAt: string;
-  services: { name: string; detail: string }[];
+  services: { name: string; priceLabel: string; display: string }[];
   dict: Dictionary;
   defaults?: CalendarAppointment;
   onDone: () => void;
 }) {
   const action = mode === "create" ? createAppointmentAction : updateAppointmentAction;
   const [state, formAction, pending] = useActionState(action, initial);
+  const [service, setService] = useState(defaults?.service ?? "");
   useEffect(() => {
     if (state.ok) onDone();
   }, [state.ok, onDone]);
@@ -197,12 +198,21 @@ function BookingForm({
         </Field>
       </div>
       <Field label={dict.appointments.service}>
-        <Input name="service" list="services" defaultValue={defaults?.service ?? ""} maxLength={80} />
-        <datalist id="services">
-          {services.map((service) => (
-            <option key={service.name} value={service.name} />
-          ))}
-        </datalist>
+        <Input name="service" value={service} onChange={(event) => setService(event.target.value)} maxLength={80} />
+        {services.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {services.map((item) => (
+              <button
+                key={item.name}
+                type="button"
+                onClick={() => setService(item.name)}
+                className="rounded-full border px-2.5 py-1 text-xs hover:border-[#E10600]"
+              >
+                {item.priceLabel ? `${item.name} · ${item.priceLabel}` : item.name}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </Field>
       <Field label={dict.appointments.notes}>
         <Textarea name="notes" defaultValue={defaults?.notes ?? ""} maxLength={500} />

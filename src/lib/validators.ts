@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SERVICE_CURRENCIES } from "@/lib/fx";
 import { SLOT_LENGTHS, TIMEZONES, TONE_KEYS } from "@/lib/services";
 
 const email = z
@@ -58,8 +59,11 @@ export const agentFormSchema = z.object({
   services: z
     .array(
       z.object({
-        name: z.string().trim().max(80),
-        detail: z.string().trim().max(160),
+        name: z.string().trim().min(1).max(80),
+        durationMin: z.number().int().min(1).max(24 * 60).nullable(),
+        price: z.number().min(0).max(1_000_000).nullable(),
+        currency: z.enum(SERVICE_CURRENCIES),
+        note: z.string().trim().max(160),
       }),
     )
     .max(30),

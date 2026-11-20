@@ -1,5 +1,6 @@
+import { formatServiceLine, serviceMoney } from "@/lib/fx";
+import { quoteServices } from "@/lib/fx-rate";
 import { tenantDb } from "@/lib/tenant-db";
-import { parseServices } from "@/lib/services";
 import { generateSlots } from "@/lib/slots";
 import {
   addZonedDays,
@@ -26,6 +27,12 @@ export type CalendarSlot = {
   endsAt: string;
   timeLabel: string;
   appointment: CalendarAppointment | null;
+};
+
+export type CalendarServiceOption = {
+  name: string;
+  priceLabel: string;
+  display: string;
 };
 
 export type CalendarDay = {
@@ -103,12 +110,18 @@ export async function buildWeek(tenantId: string, weekParam: string | undefined,
     });
   }
 
+  const quoted = await quoteServices(agent.servicesJson, locale);
   return {
     timezone,
     weekStart: dayKey(anchor, timezone),
     prevWeek: dayKey(addZonedDays(anchor, -7, timezone), timezone),
     nextWeek: dayKey(addZonedDays(anchor, 7, timezone), timezone),
-    services: parseServices(agent.servicesJson),
+    services: quoted.services.map((service) => ({
+      name: service.name,
+      priceLabel: serviceMoney(service, locale, quoted.quote.ronPerGbp).label,
+      display: formatServiceLine(service, locale, quoted.quote.ronPerGbp),
+    })),
+    fx: quoted.quote,
     days,
   };
 }

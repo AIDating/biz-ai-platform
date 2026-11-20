@@ -1,4 +1,7 @@
-export type ServiceItem = { name: string; detail: string };
+import type { FxSource } from "@/lib/fx";
+import type { ServiceItem } from "@/lib/services";
+
+export type { ServiceItem };
 
 export type AgentContext = {
   locale: "ro" | "en";
@@ -11,6 +14,7 @@ export type AgentContext = {
   greeting: string;
   slotMinutes: number;
   timezone: string;
+  fx?: { ronPerGbp: number; source: FxSource };
 };
 
 export type ToolCall = {
