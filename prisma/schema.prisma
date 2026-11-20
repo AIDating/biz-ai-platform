@@ -32,17 +32,30 @@ model Tenant {
   appointments  Appointment[]
   integrations  Integration[]
   proposals     ContentProposal[]
+  payments      SubscriptionPayment[]
+
+  /// Platform plan: start (£49), business (£99), premium (£199).
+  subscriptionPlan   String @default("start")
+  /// active | trial | suspended. Only active subscriptions count toward MRR.
+  subscriptionStatus String @default("trial")
+  /// Monthly price in pence, kept aligned with the plan.
+  monthlyPricePence  Int    @default(4900)
+  currency           String @default("GBP")
+
+  @@index([subscriptionStatus])
 }
 
 model User {
   id           String    @id @default(cuid())
-  tenantId     String
+  /// Null for platform admins. Business owners always belong to one tenant.
+  tenantId     String?
   email        String    @unique
   name         String
   passwordHash String
+  /// `owner` (default) is a business account. `admin` is RedLine platform staff.
   role         String    @default("owner")
   createdAt    DateTime  @default(now())
-  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   sessions     Session[]
 
   @@index([tenantId])
@@ -211,4 +224,23 @@ model ContentProposal {
   tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, status])
+}
+
+/// A subscription charge for a business. Platform admins read these across tenants.
+/// status: succeeded | due | failed.
+model SubscriptionPayment {
+  id          String   @id @default(cuid())
+  tenantId    String
+  plan        String
+  amountPence Int
+  currency    String   @default("GBP")
+  status      String
+  periodStart DateTime
+  periodEnd   DateTime
+  invoiceRef  String
+  createdAt   DateTime @default(now())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([status])
 }

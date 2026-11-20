@@ -7,6 +7,7 @@ for (const line of readFileSync(new URL("../.env", import.meta.url), "utf8").spl
   if (!match || process.env[match[1]]) continue;
   process.env[match[1]] = match[2].replace(/^"|"$/g, "");
 }
+import { PLAN_MONTHLY_PENCE } from "../src/lib/billing";
 import { hashPassword } from "../src/lib/password";
 import { addZonedDays, startOfZonedDay, zonedParts, zonedWallTime, zonedWeekday } from "../src/lib/time";
 
@@ -34,17 +35,31 @@ function atPast(dayOfWeek: number, hour: number, minute: number, timeZone: strin
   throw new Error("No past day");
 }
 
+function monthWindow(monthsAgo: number) {
+  const now = new Date();
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - monthsAgo, 1, 8, 0, 0));
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - monthsAgo + 1, 1, 8, 0, 0));
+  const billedAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - monthsAgo, 3, 8, 0, 0));
+  return { start, end, billedAt };
+}
+
 async function main() {
+  await prisma.user.deleteMany({ where: { email: "admin@redline.ro" } });
   await prisma.tenant.deleteMany({ where: { slug: { in: ["salon-iris", "service-auto-radu"] } } });
 
   const irisPassword = await hashPassword("DemoIris2026!");
   const raduPassword = await hashPassword("DemoRadu2026!");
+  const adminPassword = await hashPassword("AdminRedline2026!");
 
   const iris = await prisma.tenant.create({
     data: {
       name: "Salon Iris",
       slug: "salon-iris",
       publicKey: "pk_demo_saloniris",
+      subscriptionPlan: "business",
+      subscriptionStatus: "active",
+      monthlyPricePence: PLAN_MONTHLY_PENCE.business,
+      currency: "GBP",
       users: {
         create: {
           email: "iris@salon-iris.ro",
@@ -190,6 +205,10 @@ async function main() {
       name: "Service Auto Radu",
       slug: "service-auto-radu",
       publicKey: "pk_demo_serviceradu",
+      subscriptionPlan: "start",
+      subscriptionStatus: "trial",
+      monthlyPricePence: PLAN_MONTHLY_PENCE.start,
+      currency: "GBP",
       users: {
         create: {
           email: "radu@service-radu.ro",
@@ -249,10 +268,84 @@ async function main() {
     },
   });
 
+  const irisCurrent = monthWindow(0);
+  const irisPrevious = monthWindow(1);
+  const irisOlder = monthWindow(2);
+  const raduCurrent = monthWindow(0);
+  const raduPrevious = monthWindow(1);
+  await prisma.subscriptionPayment.createMany({
+    data: [
+      {
+        tenantId: iris.id,
+        plan: "business",
+        amountPence: PLAN_MONTHLY_PENCE.business,
+        currency: "GBP",
+        status: "succeeded",
+        periodStart: irisOlder.start,
+        periodEnd: irisOlder.end,
+        invoiceRef: "INV-IRIS-001",
+        createdAt: irisOlder.billedAt,
+      },
+      {
+        tenantId: iris.id,
+        plan: "business",
+        amountPence: PLAN_MONTHLY_PENCE.business,
+        currency: "GBP",
+        status: "succeeded",
+        periodStart: irisPrevious.start,
+        periodEnd: irisPrevious.end,
+        invoiceRef: "INV-IRIS-002",
+        createdAt: irisPrevious.billedAt,
+      },
+      {
+        tenantId: iris.id,
+        plan: "business",
+        amountPence: PLAN_MONTHLY_PENCE.business,
+        currency: "GBP",
+        status: "succeeded",
+        periodStart: irisCurrent.start,
+        periodEnd: irisCurrent.end,
+        invoiceRef: "INV-IRIS-003",
+        createdAt: irisCurrent.billedAt,
+      },
+      {
+        tenantId: radu.id,
+        plan: "start",
+        amountPence: PLAN_MONTHLY_PENCE.start,
+        currency: "GBP",
+        status: "failed",
+        periodStart: raduPrevious.start,
+        periodEnd: raduPrevious.end,
+        invoiceRef: "INV-RADU-001",
+        createdAt: raduPrevious.billedAt,
+      },
+      {
+        tenantId: radu.id,
+        plan: "start",
+        amountPence: PLAN_MONTHLY_PENCE.start,
+        currency: "GBP",
+        status: "due",
+        periodStart: raduCurrent.start,
+        periodEnd: raduCurrent.end,
+        invoiceRef: "INV-RADU-002",
+        createdAt: raduCurrent.billedAt,
+      },
+    ],
+  });
+
+  await prisma.user.create({
+    data: {
+      email: "admin@redline.ro",
+      name: "RedLine Admin",
+      passwordHash: adminPassword,
+      role: "admin",
+    },
+  });
+
   await prisma.$executeRawUnsafe(
     `CREATE UNIQUE INDEX IF NOT EXISTS "Appointment_no_double_book" ON "Appointment"("tenantId", "startsAt") WHERE "status" != 'cancelled'`,
   );
-  console.log("Seed gata. Salon Iris și Service Auto Radu.");
+  console.log("Seed gata. Salon Iris, Service Auto Radu și admin@redline.ro.");
 }
 
 main()

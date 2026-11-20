@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["tests/secret-crypto.test.ts"],
+    include: ["tests/secret-crypto.test.ts", "tests/admin-platform.test.ts"],
   },
   resolve: {
     alias: {

@@ -20,6 +20,12 @@ export const signupSchema = z.object({
   businessName: z.string().trim().min(2).max(80),
 });
 
+export const adminSubscriptionSchema = z.object({
+  tenantId: z.string().trim().min(1).max(80),
+  status: z.enum(["active", "trial", "suspended"]),
+  plan: z.enum(["start", "business", "premium"]),
+});
+
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().max(120),
   password: z.string().min(1).max(200),
