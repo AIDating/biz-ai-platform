@@ -5,7 +5,9 @@ import {
   createOAuthState,
   isMarketingPlatform,
   isOAuthConfigured,
+  resolveOAuthCredentials,
 } from "@/lib/marketing-oauth";
+import { tenantDb } from "@/lib/tenant-db";
 
 type Params = { params: Promise<{ platform: string }> };
 
@@ -18,8 +20,10 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.redirect(new URL("/dashboard/marketing", origin));
   }
   const platform = raw;
+  const db = tenantDb(user.tenantId);
+  const credentials = await resolveOAuthCredentials(platform, db);
 
-  if (!isOAuthConfigured(platform)) {
+  if (!isOAuthConfigured(platform, credentials) || !credentials) {
     const dest = new URL("/dashboard/marketing", origin);
     dest.searchParams.set("platform", platform);
     dest.searchParams.set("error", "missing_config");
@@ -27,13 +31,7 @@ export async function GET(request: Request, { params }: Params) {
   }
 
   const state = createOAuthState({ platform, tenantId: user.tenantId, userId: user.id });
-  const authorizeUrl = buildAuthorizeUrl(platform, state);
-  if (!authorizeUrl) {
-    const dest = new URL("/dashboard/marketing", origin);
-    dest.searchParams.set("platform", platform);
-    dest.searchParams.set("error", "missing_config");
-    return NextResponse.redirect(dest);
-  }
+  const authorizeUrl = buildAuthorizeUrl(platform, state, credentials);
 
   const response = NextResponse.redirect(authorizeUrl);
   response.cookies.set(`oauth_${platform}`, state, {

@@ -228,15 +228,17 @@ export const en: Dictionary = {
       "On the Premium plan, the assistant signs in to Facebook, Instagram, and TikTok and publishes on behalf of the business — only after your approval.",
     premiumBadge: "Premium",
     premiumNote:
-      "This area prepares the Premium flow: platform connect, brief, approval, scheduling, and history. Without OAuth keys in the environment, real sign-in does not start — we do not invent credentials.",
+      "This area prepares the Premium flow: platform API keys, connect, brief, approval, scheduling, and history. Enter keys on each card — we do not invent credentials.",
     platformsTitle: "Platforms",
     statusConnected: "Connected",
     statusDisconnected: "Not connected",
     statusNotConfigured: "OAuth keys missing",
+    statusKeysReady: "Keys saved",
     configMissing:
-      "OAuth keys for {platform} are not set in the environment ({missing}). Add them when you are ready — we do not write them here.",
+      "OAuth keys for {platform} are not saved yet. Fill in the Client ID and secret on the card below.",
     oauthErrors: {
-      missing_config: "Connect cannot start: OAuth keys for this platform are missing.",
+      missing_config:
+        "Connect cannot start: OAuth keys for this platform are missing. Save them on the card, then try again.",
       oauth_denied: "Sign-in was denied on the platform.",
       invalid_state: "The sign-in session is invalid. Try again.",
       missing_code: "The platform did not return an authorization code.",
@@ -246,6 +248,41 @@ export const en: Dictionary = {
     whatTitle: "What the assistant does on Premium",
     whatBody:
       "After sign-in, the assistant prepares drafts from your brief, asks for explicit approval, then publishes immediately or at the time you choose. Nothing goes live without your approval.",
+    keys: {
+      title: "API / OAuth keys",
+      subtitle: "Save your app keys. The secret is stored encrypted and is never shown in clear text again.",
+      missing: "No keys saved yet for this platform.",
+      savedTenant: "Keys saved for this business (ID: {id}). The secret stays masked.",
+      savedEnv: "Using keys from the server environment (ID: {id}). You can replace them with yours below.",
+      save: "Save keys",
+      saving: "Saving…",
+      saved: "Keys saved.",
+      clear: "Delete saved keys",
+      required: "Enter Client ID and secret. When updating, an empty secret field keeps the secret already saved.",
+      invalidPlatform: "Invalid platform.",
+      secretPlaceholderKeep: "Leave blank to keep the saved secret",
+      secretHint: "To replace the secret, type the new value. An empty field keeps the current secret.",
+      platforms: {
+        facebook: {
+          clientIdLabel: "App ID (Client ID)",
+          clientIdPlaceholder: "Facebook app ID",
+          clientSecretLabel: "App Secret",
+          clientSecretPlaceholder: "Facebook app secret",
+        },
+        instagram: {
+          clientIdLabel: "Client ID / App ID",
+          clientIdPlaceholder: "Instagram or Meta app ID",
+          clientSecretLabel: "Client Secret / App Secret",
+          clientSecretPlaceholder: "Instagram or Meta app secret",
+        },
+        tiktok: {
+          clientIdLabel: "Client Key",
+          clientIdPlaceholder: "TikTok client key",
+          clientSecretLabel: "Client Secret",
+          clientSecretPlaceholder: "TikTok client secret",
+        },
+      },
+    },
     platforms: {
       facebook: {
         name: "Facebook",

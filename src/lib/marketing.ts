@@ -156,29 +156,5 @@ export async function ensureDraftProposals(
   }
 }
 
-export type PlatformLinkState = {
-  channel: MarketingPlatform;
-  connected: boolean;
-  accountLabel: string | null;
-};
-
-export async function loadPlatformLinks(db: TenantClient): Promise<PlatformLinkState[]> {
-  const rows = await db.integration.findMany({
-    where: { channel: { in: [...MARKETING_PLATFORMS] } },
-  });
-  return MARKETING_PLATFORMS.map((channel) => {
-    const row = rows.find((item) => item.channel === channel);
-    let accountLabel: string | null = null;
-    let connected = false;
-    if (row?.enabled) {
-      connected = true;
-      try {
-        const cfg = JSON.parse(row.configJson) as { accountLabel?: string };
-        accountLabel = cfg.accountLabel ?? null;
-      } catch {
-        accountLabel = null;
-      }
-    }
-    return { channel, connected, accountLabel };
-  });
-}
+export { loadPlatformKeyStates as loadPlatformLinks } from "@/lib/marketing-oauth";
+export type { PlatformKeyPublicState as PlatformLinkState } from "@/lib/marketing-oauth";

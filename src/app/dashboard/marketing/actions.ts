@@ -11,7 +11,11 @@ import {
   serializePayload,
   type ProposalStatus,
 } from "@/lib/marketing";
-import { isMarketingPlatform } from "@/lib/marketing-oauth";
+import {
+  clearPlatformOAuthKeys,
+  isMarketingPlatform,
+  savePlatformOAuthKeys,
+} from "@/lib/marketing-oauth";
 import { tenantDb } from "@/lib/tenant-db";
 
 export type MarketingActionState = { ok: boolean; error?: string };
@@ -141,6 +145,36 @@ export async function decideProposalAction(
 
   refresh();
   return { ok: true };
+}
+
+export async function savePlatformKeysAction(
+  _prev: MarketingActionState,
+  formData: FormData,
+): Promise<MarketingActionState> {
+  const user = await requireUser();
+  const dict = await getDictionary();
+  const platform = String(formData.get("platform") ?? "");
+  if (!isMarketingPlatform(platform)) {
+    return { ok: false, error: dict.marketing.keys.invalidPlatform };
+  }
+  const clientId = String(formData.get("clientId") ?? "");
+  const clientSecret = String(formData.get("clientSecret") ?? "");
+  const db = tenantDb(user.tenantId);
+  const result = await savePlatformOAuthKeys(db, user.tenantId, platform, { clientId, clientSecret });
+  if (!result.ok) {
+    return { ok: false, error: dict.marketing.keys.required };
+  }
+  refresh();
+  return { ok: true };
+}
+
+export async function clearPlatformKeysAction(formData: FormData): Promise<void> {
+  const user = await requireUser();
+  const platform = String(formData.get("platform") ?? "");
+  if (!isMarketingPlatform(platform)) return;
+  const db = tenantDb(user.tenantId);
+  await clearPlatformOAuthKeys(db, platform);
+  refresh();
 }
 
 export async function regenerateDraftAction(formData: FormData): Promise<void> {

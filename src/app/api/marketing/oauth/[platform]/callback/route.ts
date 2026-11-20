@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { requireUser } from "@/lib/auth";
-import { isMarketingPlatform, isOAuthConfigured, parseOAuthState } from "@/lib/marketing-oauth";
+import {
+  isMarketingPlatform,
+  isOAuthConfigured,
+  parseIntegrationConfig,
+  parseOAuthState,
+  resolveOAuthCredentials,
+} from "@/lib/marketing-oauth";
 import { tenantDb } from "@/lib/tenant-db";
 
 type Params = { params: Promise<{ platform: string }> };
@@ -24,7 +30,9 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.redirect(dest);
   }
 
-  if (!isOAuthConfigured(platform)) {
+  const db = tenantDb(user.tenantId);
+  const credentials = await resolveOAuthCredentials(platform, db);
+  if (!isOAuthConfigured(platform, credentials)) {
     dest.searchParams.set("error", "missing_config");
     return NextResponse.redirect(dest);
   }
@@ -45,11 +53,12 @@ export async function GET(request: Request, { params }: Params) {
     return NextResponse.redirect(dest);
   }
 
-  // Secrets exist, but full token exchange is a later Premium slice.
+  // Secrets exist (tenant or env), but full token exchange is a later Premium slice.
   // Persist a pending flag only — never invent access tokens.
-  const db = tenantDb(user.tenantId);
   const existing = await db.integration.findFirst({ where: { channel: platform } });
+  const config = parseIntegrationConfig(existing?.configJson);
   const configJson = JSON.stringify({
+    ...config,
     oauthPending: true,
     codeReceivedAt: new Date().toISOString(),
     note: "OAuth code received; token exchange not completed in this build.",

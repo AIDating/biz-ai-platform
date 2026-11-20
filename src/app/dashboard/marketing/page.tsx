@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { MarketingBriefForm } from "@/components/marketing-brief-form";
 import { MarketingHistory, type HistoryItem } from "@/components/marketing-history";
+import { MarketingPlatformKeys } from "@/components/marketing-platform-keys";
 import { MarketingProposalCard, type ProposalCardModel } from "@/components/marketing-proposal-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,6 @@ import { requireUser } from "@/lib/auth";
 import { loadBrief, loadPlatformLinks, parsePayload, type ProposalStatus } from "@/lib/marketing";
 import {
   MARKETING_PLATFORMS,
-  oauthConfigStatus,
   oauthStartPath,
   type MarketingPlatform,
 } from "@/lib/marketing-oauth";
@@ -79,9 +79,7 @@ async function MarketingContent({
   const flashError = params.error as keyof typeof copy.oauthErrors | undefined;
   const flashMessage =
     flashPlatform && flashError === "missing_config"
-      ? copy.configMissing
-          .replaceAll("{platform}", copy.platforms[flashPlatform].name)
-          .replaceAll("{missing}", oauthConfigStatus(flashPlatform).missing.join(", "))
+      ? copy.configMissing.replaceAll("{platform}", copy.platforms[flashPlatform].name)
       : flashError && flashError in copy.oauthErrors
         ? copy.oauthErrors[flashError]
         : null;
@@ -135,7 +133,6 @@ async function MarketingContent({
     }
   }
 
-  // Keep one open card per platform (newest already first)
   const seen = new Set<string>();
   const uniqueOpen = openProposals.filter((item) => {
     if (seen.has(item.channel)) return false;
@@ -165,11 +162,13 @@ async function MarketingContent({
           {MARKETING_PLATFORMS.map((platform) => {
             const meta = copy.platforms[platform];
             const link = links.find((item) => item.channel === platform);
-            const oauth = oauthConfigStatus(platform);
+            const hasKeys = Boolean(link?.hasKeys);
             const statusLabel = link?.connected
               ? copy.statusConnected
-              : oauth.configured
-                ? copy.statusDisconnected
+              : hasKeys
+                ? link?.source === "tenant"
+                  ? copy.statusKeysReady
+                  : copy.statusDisconnected
                 : copy.statusNotConfigured;
             return (
               <Card key={platform}>
@@ -177,22 +176,26 @@ async function MarketingContent({
                   <div className="min-w-0">
                     <CardTitle className="text-xl">{meta.name}</CardTitle>
                     <p className="mt-1 text-sm text-muted-foreground">{meta.blurb}</p>
-                    {!oauth.configured ? (
-                      <p className="mt-2 text-xs text-[#e10600]">
-                        {copy.configMissing
-                          .replaceAll("{platform}", meta.name)
-                          .replaceAll("{missing}", oauth.missing.join(", "))}
-                      </p>
-                    ) : null}
                   </div>
-                  <Badge tone={link?.connected ? "good" : oauth.configured ? "neutral" : "warn"}>
-                    {statusLabel}
-                  </Badge>
+                  <Badge tone={link?.connected ? "good" : hasKeys ? "neutral" : "warn"}>{statusLabel}</Badge>
                 </CardHeader>
-                <CardContent>
-                  <Button asChild variant="outline" size="sm">
-                    <a href={oauthStartPath(platform)}>{meta.connect}</a>
-                  </Button>
+                <CardContent className="space-y-4">
+                  <MarketingPlatformKeys
+                    platform={platform}
+                    hasKeys={hasKeys}
+                    clientIdMasked={link?.clientIdMasked ?? null}
+                    source={link?.source ?? "none"}
+                    dict={copy.keys}
+                  />
+                  {hasKeys ? (
+                    <Button asChild variant="outline" size="sm">
+                      <a href={oauthStartPath(platform)}>{meta.connect}</a>
+                    </Button>
+                  ) : (
+                    <Button type="button" variant="outline" size="sm" disabled>
+                      {meta.connect}
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             );

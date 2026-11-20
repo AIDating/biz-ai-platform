@@ -226,15 +226,17 @@ export const ro = {
       "În planul Premium, asistentul se autentifică pe Facebook, Instagram și TikTok și publică postări în numele afacerii — doar după aprobarea dumneavoastră.",
     premiumBadge: "Premium",
     premiumNote:
-      "Această zonă pregătește fluxul Premium: conectare pe platforme, brief, aprobare, programare și istoric. Fără chei OAuth în mediu, autentificarea reală nu pornește — nu inventăm credențiale.",
+      "Această zonă pregătește fluxul Premium: chei API pe platforme, conectare, brief, aprobare, programare și istoric. Introduceți cheile pe fiecare card — nu inventăm credențiale.",
     platformsTitle: "Platforme",
     statusConnected: "Conectat",
     statusDisconnected: "Neconectat",
     statusNotConfigured: "Chei OAuth lipsă",
+    statusKeysReady: "Chei salvate",
     configMissing:
-      "Cheile OAuth pentru {platform} nu sunt configurate în mediu ({missing}). Adăugați-le când sunteți gata — nu le scriem noi aici.",
+      "Cheile OAuth pentru {platform} nu sunt salvate încă. Completați Client ID și secretul pe cardul de mai jos.",
     oauthErrors: {
-      missing_config: "Conectarea nu poate începe: lipsesc cheile OAuth pentru această platformă.",
+      missing_config:
+        "Conectarea nu poate începe: lipsesc cheile OAuth pentru această platformă. Salvați-le pe card, apoi încercați din nou.",
       oauth_denied: "Autentificarea a fost refuzată pe platformă.",
       invalid_state: "Sesiunea de autentificare nu este validă. Încercați din nou.",
       missing_code: "Platforma nu a returnat un cod de autorizare.",
@@ -244,6 +246,41 @@ export const ro = {
     whatTitle: "Ce face asistentul pe Premium",
     whatBody:
       "După autentificare, asistentul pregătește drafturi pe baza brief-ului, cere aprobarea explicită, apoi publică imediat sau la data aleasă. Nimic nu iese pe rețele fără aprobarea dumneavoastră.",
+    keys: {
+      title: "Chei API / OAuth",
+      subtitle: "Salvați cheile aplicației dumneavoastră. Secretul este stocat criptat și nu este reafișat în clar.",
+      missing: "Nicio cheie salvată încă pentru această platformă.",
+      savedTenant: "Chei salvate pentru afacere (ID: {id}). Secretul rămâne mascat.",
+      savedEnv: "Se folosesc chei din mediul serverului (ID: {id}). Le puteți înlocui cu ale dumneavoastră mai jos.",
+      save: "Salvează cheile",
+      saving: "Se salvează…",
+      saved: "Cheile au fost salvate.",
+      clear: "Șterge cheile salvate",
+      required: "Introduceți Client ID și secretul. La actualizare, câmpul de secret gol păstrează secretul deja salvat.",
+      invalidPlatform: "Platformă invalidă.",
+      secretPlaceholderKeep: "Lăsați gol pentru a păstra secretul salvat",
+      secretHint: "Pentru a înlocui secretul, scrieți valoarea nouă. Câmpul gol păstrează secretul actual.",
+      platforms: {
+        facebook: {
+          clientIdLabel: "App ID (Client ID)",
+          clientIdPlaceholder: "ID-ul aplicației Facebook",
+          clientSecretLabel: "App Secret",
+          clientSecretPlaceholder: "Secretul aplicației Facebook",
+        },
+        instagram: {
+          clientIdLabel: "Client ID / App ID",
+          clientIdPlaceholder: "ID-ul aplicației Instagram sau Meta",
+          clientSecretLabel: "Client Secret / App Secret",
+          clientSecretPlaceholder: "Secretul aplicației Instagram sau Meta",
+        },
+        tiktok: {
+          clientIdLabel: "Client Key",
+          clientIdPlaceholder: "Cheia client TikTok",
+          clientSecretLabel: "Client Secret",
+          clientSecretPlaceholder: "Secretul client TikTok",
+        },
+      },
+    },
     platforms: {
       facebook: {
         name: "Facebook",
