@@ -6,6 +6,7 @@
  */
 export const CHANNELS = [
   "web_widget",
+  "dashboard",
   "whatsapp",
   "phone",
   "tiktok",
