@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { logoutAction, setAgentEnabledAction } from "@/app/dashboard/actions";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { DashboardOwnerChat } from "@/components/dashboard-owner-chat";
@@ -6,6 +8,7 @@ import { LocaleSwitch } from "@/components/locale-switch";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { getDictionary, getLocale } from "@/i18n";
+import { isPlatformAdmin } from "@/lib/admin-access";
 import { requireUser } from "@/lib/auth";
 import { llmMode } from "@/lib/llm";
 import { tenantDb } from "@/lib/tenant-db";
@@ -22,6 +25,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
 async function Shell({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
+  if (!user.tenantId) {
+    if (isPlatformAdmin(user)) redirect("/admin");
+    redirect("/login");
+  }
   const [dict, locale] = await Promise.all([getDictionary(), getLocale()]);
   const agent = await tenantDb(user.tenantId).agentProfile.findFirst();
   const enabled = Boolean(agent?.enabled);
@@ -50,6 +57,11 @@ async function Shell({ children }: { children: React.ReactNode }) {
         </div>
         <div className="px-3 pb-6">
           <DashboardNav items={items} />
+          {isPlatformAdmin(user) ? (
+            <Link href="/admin" className="mt-4 block px-3 text-sm text-[#e10600]">
+              {dict.admin.open}
+            </Link>
+          ) : null}
           <form action={logoutAction} className="mt-6 px-3">
             <Button type="submit" variant="outline" size="sm">
               {dict.nav.logout}

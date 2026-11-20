@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDictionary, getLocale } from "@/i18n";
+import { isPlatformAdmin } from "@/lib/admin-access";
 import { loginWithPassword, registerBusiness } from "@/lib/auth";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { loginSchema, signupSchema } from "@/lib/validators";
@@ -20,8 +21,9 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
     password: formData.get("password"),
   });
   if (!parsed.success) return { error: dict.auth.invalid };
-  const ok = await loginWithPassword(parsed.data.email, parsed.data.password);
-  if (!ok) return { error: dict.auth.invalid };
+  const result = await loginWithPassword(parsed.data.email, parsed.data.password);
+  if (!result.ok) return { error: dict.auth.invalid };
+  if (isPlatformAdmin({ role: result.role, email: result.email })) redirect("/admin");
   redirect("/dashboard");
 }
 

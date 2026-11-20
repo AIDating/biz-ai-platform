@@ -3,6 +3,8 @@ import { createHash, createHmac, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
+import { isPlatformAdmin } from "@/lib/admin-access";
+import { PLAN_MONTHLY_PENCE } from "@/lib/billing";
 import { basePrisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { FUTURE_CHANNELS } from "@/lib/channels";
@@ -51,9 +53,9 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
     email: user.email,
     name: user.name,
     role: user.role,
-    tenantId: user.tenantId,
-    tenantName: user.tenant.name,
-    publicKey: user.tenant.publicKey,
+    tenantId: user.tenantId ?? "",
+    tenantName: user.tenant?.name ?? "",
+    publicKey: user.tenant?.publicKey ?? "",
   };
 });
 
@@ -62,6 +64,16 @@ export async function requireUser() {
   if (!user) redirect("/login");
   return user;
 }
+
+/** Pages and server actions. Anonymous users go to login. Owners are sent back to their dashboard. */
+export async function requirePlatformAdmin() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (!isPlatformAdmin(user)) redirect("/dashboard");
+  return user;
+}
+
+export { isPlatformAdmin };
 
 export async function createSession(userId: string) {
   const token = randomBytes(32).toString("base64url");
@@ -107,7 +119,15 @@ export async function registerBusiness(input: {
   const publicKey = `pk_${randomBytes(18).toString("base64url")}`;
   const user = await basePrisma.$transaction(async (tx) => {
     const tenant = await tx.tenant.create({
-      data: { name: input.businessName.trim(), slug, publicKey },
+      data: {
+        name: input.businessName.trim(),
+        slug,
+        publicKey,
+        subscriptionPlan: "start",
+        subscriptionStatus: "trial",
+        monthlyPricePence: PLAN_MONTHLY_PENCE.start,
+        currency: "GBP",
+      },
     });
     const created = await tx.user.create({
       data: {
@@ -153,11 +173,11 @@ export async function registerBusiness(input: {
 
 export async function loginWithPassword(email: string, password: string) {
   const user = await basePrisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
-  if (!user) return false;
+  if (!user) return { ok: false as const };
   const matches = await verifyPassword(password, user.passwordHash);
-  if (!matches) return false;
+  if (!matches) return { ok: false as const };
   await createSession(user.id);
-  return true;
+  return { ok: true as const, email: user.email, role: user.role };
 }
 
 export function fingerprint(value: string) {

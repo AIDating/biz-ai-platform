@@ -7,6 +7,7 @@ export default defineConfig({
     environment: "node",
     include: [
       "tests/secret-crypto.test.ts",
+      "tests/admin-platform.test.ts",
       "tests/services-fx.test.ts",
       "tests/service-currency.test.ts",
       "tests/marketing-youtube.test.ts",
