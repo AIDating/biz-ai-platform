@@ -226,7 +226,8 @@ export const OWNER_TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "list_marketing",
-      description: "Show marketing platforms, brief, and recent posts/drafts.",
+      description:
+        "Show facebook, instagram, tiktok, and youtube with hasKeys, source, and connection status, plus the brief and recent posts.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
     },
   },
@@ -247,7 +248,7 @@ export const OWNER_TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "create_marketing_draft",
-      description: "Create a pending draft post for facebook, instagram, or tiktok.",
+      description: "Create a pending draft post for facebook, instagram, tiktok, or youtube.",
       parameters: {
         type: "object",
         properties: { channel: { type: "string" }, text: { type: "string" }, title: { type: "string" } },

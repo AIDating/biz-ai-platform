@@ -115,7 +115,7 @@ async function runMockOwner(
     await run("list_customers", { limit: 8 });
   } else if (/servici|service|preț|price/.test(text)) {
     await run("list_services");
-  } else if (/marketing|facebook|instagram|tiktok|brief|postare/.test(text)) {
+  } else if (/marketing|facebook|instagram|tiktok|youtube|brief|postare/.test(text)) {
     await run("list_marketing");
   } else if (/profil|setăr|agent|tone|ton/.test(text)) {
     await run("get_agent_profile");

@@ -1,6 +1,6 @@
 /**
  * Channel seam. Phase 1 implements web_widget only.
- * Later adapters (WhatsApp, phone, TikTok, Facebook, Instagram) translate
+ * Later adapters (WhatsApp, phone, TikTok, Facebook, Instagram, YouTube) translate
  * their webhooks into InboundMessage and call handleInbound(). Replies go
  * back out through ChannelAdapter.send. No adapter here publishes or spends.
  */
@@ -12,6 +12,7 @@ export const CHANNELS = [
   "tiktok",
   "facebook",
   "instagram",
+  "youtube",
 ] as const;
 
 export type ChannelId = (typeof CHANNELS)[number];
@@ -22,6 +23,7 @@ export const FUTURE_CHANNELS = [
   "tiktok",
   "facebook",
   "instagram",
+  "youtube",
 ] as const satisfies readonly ChannelId[];
 
 export type InboundMessage = {
@@ -51,7 +53,7 @@ export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number];
 
 export type ProposalDraft = {
   tenantId: string;
-  channel: "facebook" | "instagram" | "tiktok";
+  channel: "facebook" | "instagram" | "tiktok" | "youtube";
   title: string;
   body: string;
 };

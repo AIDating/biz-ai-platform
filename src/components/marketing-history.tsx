@@ -22,7 +22,14 @@ export function MarketingHistory({
   items: HistoryItem[];
   dict: Dictionary["marketing"]["history"];
 }) {
-  const [filter, setFilter] = useState<"all" | "facebook" | "instagram" | "tiktok">("all");
+  const filters = [
+    ["all", dict.filterAll],
+    ["facebook", dict.filterFacebook],
+    ["instagram", dict.filterInstagram],
+    ["tiktok", dict.filterTiktok],
+    ["youtube", dict.filterYoutube],
+  ] as const;
+  const [filter, setFilter] = useState<(typeof filters)[number][0]>("all");
 
   const filtered = useMemo(() => {
     const list = filter === "all" ? items : items.filter((item) => item.channel === filter);
@@ -42,14 +49,7 @@ export function MarketingHistory({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        {(
-          [
-            ["all", dict.filterAll],
-            ["facebook", dict.filterFacebook],
-            ["instagram", dict.filterInstagram],
-            ["tiktok", dict.filterTiktok],
-          ] as const
-        ).map(([value, label]) => (
+        {filters.map(([value, label]) => (
           <button
             key={value}
             type="button"

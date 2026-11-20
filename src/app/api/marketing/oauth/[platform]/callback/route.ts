@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { requireUser } from "@/lib/auth";
 import {
+  connectYouTubeAccount,
   isMarketingPlatform,
   isOAuthConfigured,
   parseIntegrationConfig,
@@ -32,7 +33,7 @@ export async function GET(request: Request, { params }: Params) {
 
   const db = tenantDb(user.tenantId);
   const credentials = await resolveOAuthCredentials(platform, db);
-  if (!isOAuthConfigured(platform, credentials)) {
+  if (!credentials || !isOAuthConfigured(platform, credentials)) {
     dest.searchParams.set("error", "missing_config");
     return NextResponse.redirect(dest);
   }
@@ -50,6 +51,13 @@ export async function GET(request: Request, { params }: Params) {
 
   if (!code) {
     dest.searchParams.set("error", "missing_code");
+    return NextResponse.redirect(dest);
+  }
+
+  if (platform === "youtube") {
+    const connected = await connectYouTubeAccount(db, user.tenantId, code, credentials);
+    jar.delete(`oauth_${platform}`);
+    if (!connected.ok) dest.searchParams.set("error", "exchange_failed");
     return NextResponse.redirect(dest);
   }
 
