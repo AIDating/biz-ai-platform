@@ -1,4 +1,4 @@
-import { normalizeCurrency, parseRonPerGbp, type FxSettings, type ServiceCurrency } from "@/lib/fx";
+import { convertAmount, normalizeCurrency, parseRonPerGbp, type FxSettings, type ServiceCurrency } from "@/lib/fx";
 
 export type { FxSettings, ServiceCurrency };
 export { SERVICE_CURRENCIES } from "@/lib/fx";
@@ -16,6 +16,37 @@ export type ServiceItem = {
 };
 
 const MAX_SERVICES = 30;
+
+export const DEFAULT_NEW_SERVICE_PRICE_GBP = 30;
+export const DEFAULT_NEW_SERVICE_PRICE_RON = 100;
+
+export function currencyForLocale(locale: "ro" | "en"): ServiceCurrency {
+  return locale === "en" ? "GBP" : "RON";
+}
+
+export function defaultNewServicePrice(locale: "ro" | "en"): { price: number; currency: ServiceCurrency } {
+  return locale === "en"
+    ? { price: DEFAULT_NEW_SERVICE_PRICE_GBP, currency: "GBP" }
+    : { price: DEFAULT_NEW_SERVICE_PRICE_RON, currency: "RON" };
+}
+
+export function formatEditablePrice(value: number) {
+  const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
+  if (Math.abs(rounded - Math.round(rounded)) < 1e-9) return String(Math.round(rounded));
+  return rounded.toFixed(2);
+}
+
+/** Price string shown in the active dashboard language. Same-currency amounts are not converted. */
+export function displayPriceAmount(
+  price: number | null,
+  currency: ServiceCurrency,
+  locale: "ro" | "en",
+  ronPerGbp: number,
+) {
+  if (price == null) return "";
+  const amount = convertAmount(price, currency, currencyForLocale(locale), ronPerGbp);
+  return formatEditablePrice(amount);
+}
 
 export function parseDurationValue(value: unknown): number | null {
   if (value == null || value === "") return null;
@@ -138,9 +169,15 @@ function readService(item: unknown): ServiceItem | null {
     .trim()
     .slice(0, 160);
   const legacy = parseLegacyDetail(legacyDetail);
-  const durationMin = "durationMin" in record ? parseDurationValue(record.durationMin) : legacy.durationMin;
-  const price = "price" in record ? parsePriceValue(record.price) : legacy.price;
-  const currency = normalizeCurrency(record.currency) ?? legacy.currency ?? "RON";
+  const durationRaw = "durationMin" in record ? record.durationMin : "durationMinutes" in record ? record.durationMinutes : record.duration;
+  const durationMin =
+    "durationMin" in record || "durationMinutes" in record || "duration" in record
+      ? parseDurationValue(durationRaw)
+      : legacy.durationMin;
+  const priceRaw = "priceAmount" in record ? record.priceAmount : record.price;
+  const price = "priceAmount" in record || "price" in record ? parsePriceValue(priceRaw) : legacy.price;
+  const currency =
+    normalizeCurrency(record.priceCurrency) ?? normalizeCurrency(record.currency) ?? legacy.currency ?? "RON";
   const note =
     "note" in record
       ? String(record.note ?? "")
@@ -214,6 +251,8 @@ export function serializeServices(
       durationMin: service.durationMin,
       price: service.price,
       currency: service.currency,
+      priceAmount: service.price,
+      priceCurrency: service.currency,
       note: service.note,
       detail: service.detail,
     }));
@@ -242,6 +281,52 @@ export function servicesFromForm(input: {
     const currency = currencyRaw ? normalizeCurrency(currencyRaw) : "RON";
     if (!currency) return { ok: false };
     const note = (input.notes[index] ?? "").trim().slice(0, 160);
+    const service: ServiceItem = { name, durationMin: duration, price, currency, note, detail: "" };
+    service.detail = formatStoredDetail(service);
+    services.push(service);
+  }
+  if (services.length > MAX_SERVICES) return { ok: false };
+  return { ok: true, services };
+}
+
+export function servicesFromLocaleForm(input: {
+  locale: "ro" | "en";
+  names: string[];
+  durations: string[];
+  prices: string[];
+  notes: string[];
+  touched: string[];
+  isNew: string[];
+  sourcePrices: string[];
+  sourceCurrencies: string[];
+}): { ok: true; services: ServiceItem[] } | { ok: false } {
+  const active = currencyForLocale(input.locale);
+  const services: ServiceItem[] = [];
+  for (let index = 0; index < input.names.length; index += 1) {
+    const name = (input.names[index] ?? "").trim().slice(0, 80);
+    if (!name) continue;
+    const duration = readFormDuration(input.durations[index] ?? "");
+    if (duration === "invalid") return { ok: false };
+    const note = (input.notes[index] ?? "").trim().slice(0, 160);
+    const touched = (input.touched[index] ?? "") === "1";
+    const isNew = (input.isNew[index] ?? "") === "1";
+    let price: number | null;
+    let currency: ServiceCurrency;
+    if (!touched && isNew) {
+      const defaults = defaultNewServicePrice(input.locale);
+      price = defaults.price;
+      currency = defaults.currency;
+    } else if (!touched) {
+      const sourcePrice = readFormPrice(input.sourcePrices[index] ?? "");
+      if (sourcePrice === "invalid") return { ok: false };
+      price = sourcePrice;
+      currency = normalizeCurrency(input.sourceCurrencies[index] ?? "") ?? "RON";
+    } else {
+      const typed = readFormPrice(input.prices[index] ?? "");
+      if (typed === "invalid") return { ok: false };
+      price = typed;
+      currency = active;
+    }
     const service: ServiceItem = { name, durationMin: duration, price, currency, note, detail: "" };
     service.detail = formatStoredDetail(service);
     services.push(service);
