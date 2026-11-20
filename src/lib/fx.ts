@@ -149,3 +149,13 @@ export function fxSettingsFromForm(modeRaw: string, rateRaw: string): { ok: true
   if (rate == null) return { ok: false };
   return { ok: true, settings: { mode: "manual", ronPerGbp: rate } };
 }
+
+/** Missing form fields keep the stored rate. A posted mode still validates. */
+export function fxSettingsForSave(
+  submittedMode: string | null,
+  submittedRate: string,
+  stored: FxSettings,
+): { ok: true; settings: FxSettings } | { ok: false } {
+  if (submittedMode == null) return { ok: true, settings: stored };
+  return fxSettingsFromForm(submittedMode, submittedRate);
+}
