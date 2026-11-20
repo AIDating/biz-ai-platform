@@ -10,7 +10,7 @@ export const en: Dictionary = {
     conversations: "Conversations",
     appointments: "Appointments",
     agent: "Agent",
-    widget: "Widget",
+    widget: "Website Connect",
     marketing: "Marketing",
     premium: "Premium",
     login: "Log in",
@@ -146,7 +146,7 @@ export const en: Dictionary = {
   customers: {
     title: "Customers",
     subtitle: "People who left a name and a phone number or email.",
-    empty: "No customers yet. Put the widget on your site, or add a booking from the calendar.",
+    empty: "No customers yet. Turn on Website Connect on your site, or add a booking from the calendar.",
     all: "All",
     fresh: "New",
     handled: "Handled",
@@ -214,7 +214,7 @@ export const en: Dictionary = {
     minutes: "minutes",
   },
   widgetPage: {
-    title: "Website widget",
+    title: "Website Connect",
     subtitle: "Copy the script and paste it before </body> on the business website.",
     copy: "Copy code",
     copied: "Copied",

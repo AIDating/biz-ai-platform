@@ -8,7 +8,7 @@ export const ro = {
     conversations: "Conversații",
     appointments: "Programări",
     agent: "Agent",
-    widget: "Widget",
+    widget: "Website Connect",
     marketing: "Marketing",
     premium: "Premium",
     login: "Intră în cont",
@@ -144,7 +144,7 @@ export const ro = {
   customers: {
     title: "Clienți",
     subtitle: "Oamenii care au lăsat un nume și un telefon sau un email.",
-    empty: "Încă nu aveți clienți. Puneți widgetul pe site sau adăugați o programare din calendar.",
+    empty: "Încă nu aveți clienți. Activați Website Connect pe site sau adăugați o programare din calendar.",
     all: "Toți",
     fresh: "Noi",
     handled: "Rezolvați",
@@ -212,7 +212,7 @@ export const ro = {
     minutes: "minute",
   },
   widgetPage: {
-    title: "Widget pentru site",
+    title: "Website Connect",
     subtitle: "Copiați scriptul și puneți-l înainte de </body> pe site-ul afacerii.",
     copy: "Copiază codul",
     copied: "Copiat",
