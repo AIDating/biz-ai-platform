@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { logoutAction, setAgentEnabledAction } from "@/app/dashboard/actions";
 import { DashboardNav } from "@/components/dashboard-nav";
+import { DashboardOwnerChat } from "@/components/dashboard-owner-chat";
 import { LocaleSwitch } from "@/components/locale-switch";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
           </form>
           <LocaleSwitch locale={locale} label={dict.localeLabel} />
         </div>
-        <div className="px-4 py-8 sm:px-8">
+        <div className="px-4 py-8 pb-28 sm:px-8 sm:pb-32">
           {mode.id === "mock" ? (
             <p className="mb-6 border-l-2 border-[#e10600] px-4 py-1 text-sm text-muted-foreground">{dict.dash.mockBanner}</p>
           ) : (
@@ -77,6 +78,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
           )}
           {children}
         </div>
+        <DashboardOwnerChat copy={dict.ownerChat} locale={locale} />
       </div>
     </div>
   );
