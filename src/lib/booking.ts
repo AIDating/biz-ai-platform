@@ -42,6 +42,11 @@ function isUniqueConflict(error: unknown) {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 }
 
+async function lockTenantBookings(tx: Prisma.TransactionClient, tenantId: string) {
+  // Serialize booking mutations per tenant so overlap checks cannot race.
+  await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${tenantId}))`;
+}
+
 async function assertFree(
   tenantId: string,
   startsAt: Date,
@@ -71,6 +76,7 @@ export async function bookAppointment(tenantId: string, input: BookingDraft) {
 
   try {
     return await basePrisma.$transaction(async (tx) => {
+      await lockTenantBookings(tx, tenantId);
       const clash = await tx.appointment.findFirst({
         where: {
           tenantId,
@@ -136,6 +142,7 @@ export async function moveAppointment(
   assertRange(input.startsAt, input.endsAt);
   try {
     return await basePrisma.$transaction(async (tx) => {
+      await lockTenantBookings(tx, tenantId);
       const current = await tx.appointment.findFirst({ where: { id, tenantId } });
       if (!current || current.status === "cancelled") return null;
       const clash = await tx.appointment.findFirst({
@@ -176,17 +183,32 @@ export async function setAppointmentStatus(
   status: "booked" | "cancelled" | "completed",
 ) {
   if (!tenantId) throw new TenantScopeError("A tenant id is required.");
-  if (status === "booked") {
-    const current = await basePrisma.appointment.findFirst({ where: { id, tenantId } });
-    if (!current) return null;
-    await assertFree(tenantId, current.startsAt, current.endsAt, id);
+  try {
+    return await basePrisma.$transaction(async (tx) => {
+      await lockTenantBookings(tx, tenantId);
+      const current = await tx.appointment.findFirst({ where: { id, tenantId } });
+      if (!current) return null;
+      if (status === "booked") {
+        const clash = await tx.appointment.findFirst({
+          where: {
+            tenantId,
+            id: { not: id },
+            status: { not: "cancelled" },
+            startsAt: { lt: current.endsAt },
+            endsAt: { gt: current.startsAt },
+          },
+          select: { id: true },
+        });
+        if (clash) throw new BookingConflictError();
+      }
+      await tx.appointment.updateMany({ where: { id, tenantId }, data: { status } });
+      return tx.appointment.findFirst({ where: { id, tenantId } });
+    });
+  } catch (error) {
+    if (error instanceof BookingConflictError) throw error;
+    if (isUniqueConflict(error)) throw new BookingConflictError();
+    throw error;
   }
-  const result = await basePrisma.appointment.updateMany({
-    where: { id, tenantId },
-    data: { status },
-  });
-  if (result.count === 0) return null;
-  return basePrisma.appointment.findFirst({ where: { id, tenantId } });
 }
 
 export async function updateAppointmentDetails(
