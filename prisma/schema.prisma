@@ -41,6 +41,8 @@ model Tenant {
   /// Monthly price in pence, kept aligned with the plan.
   monthlyPricePence  Int    @default(4900)
   currency           String @default("GBP")
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
 
   @@index([subscriptionStatus])
 }
@@ -243,4 +245,13 @@ model SubscriptionPayment {
 
   @@index([tenantId, createdAt])
   @@index([status])
+}
+
+
+/// Stripe webhook event IDs make delivery idempotent.
+model StripeWebhookEvent {
+  id        String   @id @default(cuid())
+  eventId   String   @unique
+  eventType String
+  createdAt DateTime @default(now())
 }
