@@ -40,6 +40,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
     { href: "/dashboard/programari", label: dict.nav.appointments, icon: "appointments" as const },
     { href: "/dashboard/agent", label: dict.nav.agent, icon: "agent" as const },
     { href: "/dashboard/widget", label: dict.nav.widget, icon: "widget" as const },
+    { href: "/dashboard/billing", label: "Abonament & plăți", icon: "billing" as const },
     {
       href: "/dashboard/marketing",
       label: dict.nav.marketing,
