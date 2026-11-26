@@ -55,6 +55,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
       href: "/dashboard/ai-studio",
       label: dict.nav.aiStudio,
       icon: "aiStudio" as const,
+      badge: dict.nav.premium,
     },
   ];
 

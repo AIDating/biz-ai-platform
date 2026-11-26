@@ -1,10 +1,14 @@
 import { Suspense } from "react";
+import Link from "next/link";
+import { Lock } from "lucide-react";
 import { AiStudioJobCard, type AiStudioJobCardModel } from "@/components/ai-studio-job-card";
 import { AiStudioKlingKeys } from "@/components/ai-studio-kling-keys";
 import { AiStudioVideoForm } from "@/components/ai-studio-video-form";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDictionary, getLocale } from "@/i18n";
+import { tenantHasAiStudioAccess } from "@/lib/ai-studio-access";
 import { loadKlingKeyState } from "@/lib/ai-studio-kling";
 import { requireUser } from "@/lib/auth";
 import { MARKETING_PLATFORMS, type MarketingPlatform } from "@/lib/marketing-oauth";
@@ -40,8 +44,46 @@ function toLocalInputValue(iso: string | null, timeZone: string) {
 
 async function AiStudioContent() {
   const user = await requireUser();
-  const [dict, locale] = await Promise.all([getDictionary(), getLocale()]);
+  const [dict, locale, allowed] = await Promise.all([
+    getDictionary(),
+    getLocale(),
+    tenantHasAiStudioAccess(user.tenantId),
+  ]);
   const copy = dict.aiStudio;
+
+  if (!allowed) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-8">
+        <div className="max-w-3xl">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-display text-4xl">{copy.title}</h1>
+            <Badge tone="warn">{dict.nav.premium}</Badge>
+          </div>
+          <p className="mt-2 max-w-2xl text-muted-foreground">{copy.subtitle}</p>
+        </div>
+        <Card className="border-[#e10600]/20 bg-[#fafafa]">
+          <CardContent className="flex flex-col gap-4 py-8 sm:flex-row sm:items-start">
+            <div
+              className="flex h-12 w-12 shrink-0 items-center justify-center border border-[#e10600]/30 bg-white text-[#e10600]"
+              aria-hidden
+            >
+              <Lock className="h-6 w-6" strokeWidth={1.75} />
+            </div>
+            <div className="min-w-0 space-y-4">
+              <div className="space-y-2">
+                <h2 className="font-display text-2xl">{copy.premiumOnlyTitle}</h2>
+                <p className="max-w-2xl text-sm text-muted-foreground">{copy.premiumOnlyBody}</p>
+              </div>
+              <Button asChild variant="brass">
+                <Link href="/#pricing">{copy.premiumUpgradeCta}</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const db = tenantDb(user.tenantId);
   const agent = await db.agentProfile.findFirst();
   const timezone = agent?.timezone ?? "Europe/Bucharest";

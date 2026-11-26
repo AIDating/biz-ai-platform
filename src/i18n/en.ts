@@ -512,6 +512,11 @@ export const en: Dictionary = {
     subtitle: "Generate video with Kling AI using your business API key. Images and text content come next.",
     billingNote:
       "RedLine does not fund Kling credits. Connect your own key — usage and billing stay between you and Kling AI.",
+    premiumOnlyTitle: "Premium plan required",
+    premiumOnlyBody:
+      "AI Studio is locked on Start and Business. Upgrade to Premium (£199/month) to unlock Kling video generation for this business.",
+    premiumUpgradeCta: "View Premium pricing",
+    premiumRequired: "AI Studio is available only on the Premium plan.",
     kling: {
       cardTitle: "Connect Kling AI",
       cardBlurb: "Per-business API key, stored encrypted.",

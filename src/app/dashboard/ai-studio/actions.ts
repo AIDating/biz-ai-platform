@@ -8,6 +8,7 @@ import {
   proposeVideoPublish,
   refreshVideoJob,
 } from "@/lib/ai-studio";
+import { tenantHasAiStudioAccess } from "@/lib/ai-studio-access";
 import { clearKlingApiKey, saveKlingApiKey } from "@/lib/ai-studio-kling";
 import { requireUser } from "@/lib/auth";
 import { getDictionary } from "@/i18n";
@@ -20,12 +21,23 @@ function refresh() {
   revalidatePath("/dashboard/ai-studio");
 }
 
+async function requireAiStudioTenant() {
+  const user = await requireUser();
+  const dict = await getDictionary();
+  const allowed = await tenantHasAiStudioAccess(user.tenantId);
+  if (!allowed) {
+    return { ok: false as const, user, dict, error: dict.aiStudio.premiumRequired };
+  }
+  return { ok: true as const, user, dict };
+}
+
 export async function saveKlingKeyAction(
   _prev: AiStudioActionState,
   formData: FormData,
 ): Promise<AiStudioActionState> {
-  const user = await requireUser();
-  const dict = await getDictionary();
+  const gate = await requireAiStudioTenant();
+  if (!gate.ok) return { ok: false, error: gate.error };
+  const { user, dict } = gate;
   const apiKey = String(formData.get("apiKey") ?? "");
   const db = tenantDb(user.tenantId);
   const result = await saveKlingApiKey(db, user.tenantId, { apiKey });
@@ -37,8 +49,9 @@ export async function saveKlingKeyAction(
 }
 
 export async function clearKlingKeyAction(): Promise<void> {
-  const user = await requireUser();
-  const db = tenantDb(user.tenantId);
+  const gate = await requireAiStudioTenant();
+  if (!gate.ok) return;
+  const db = tenantDb(gate.user.tenantId);
   await clearKlingApiKey(db);
   refresh();
 }
@@ -47,8 +60,9 @@ export async function createVideoJobAction(
   _prev: AiStudioActionState,
   formData: FormData,
 ): Promise<AiStudioActionState> {
-  const user = await requireUser();
-  const dict = await getDictionary();
+  const gate = await requireAiStudioTenant();
+  if (!gate.ok) return { ok: false, error: gate.error };
+  const { user, dict } = gate;
   const modeRaw = String(formData.get("mode") ?? "");
   if (!isVideoMode(modeRaw)) {
     return { ok: false, error: dict.aiStudio.video.invalidMode };
@@ -76,10 +90,11 @@ export async function createVideoJobAction(
 }
 
 export async function refreshVideoJobAction(formData: FormData): Promise<void> {
-  const user = await requireUser();
+  const gate = await requireAiStudioTenant();
+  if (!gate.ok) return;
   const jobId = String(formData.get("jobId") ?? "");
   if (!jobId) return;
-  const db = tenantDb(user.tenantId);
+  const db = tenantDb(gate.user.tenantId);
   await refreshVideoJob(db, jobId);
   refresh();
 }
@@ -88,8 +103,9 @@ export async function proposePublishAction(
   _prev: AiStudioActionState,
   formData: FormData,
 ): Promise<AiStudioActionState> {
-  const user = await requireUser();
-  const dict = await getDictionary();
+  const gate = await requireAiStudioTenant();
+  if (!gate.ok) return { ok: false, error: gate.error };
+  const { user, dict } = gate;
   const jobId = String(formData.get("jobId") ?? "");
   const channel = String(formData.get("channel") ?? "");
   const caption = String(formData.get("caption") ?? "");
@@ -114,8 +130,9 @@ export async function decidePublishAction(
   _prev: AiStudioActionState,
   formData: FormData,
 ): Promise<AiStudioActionState> {
-  const user = await requireUser();
-  const dict = await getDictionary();
+  const gate = await requireAiStudioTenant();
+  if (!gate.ok) return { ok: false, error: gate.error };
+  const { user, dict } = gate;
   const jobId = String(formData.get("jobId") ?? "");
   const decision = String(formData.get("decision") ?? "") as "approve" | "reject";
   const scheduleMode =

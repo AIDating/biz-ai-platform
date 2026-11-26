@@ -413,5 +413,30 @@ describe("AI Studio i18n + nav copy", () => {
     expect(en.aiStudio.kling.billingNote).toContain("RedLine");
     expect(ro.aiStudio.stubs.imagesTitle).toBeTruthy();
     expect(en.aiStudio.stubs.contentTitle).toBeTruthy();
+    expect(ro.aiStudio.premiumOnlyTitle).toBeTruthy();
+    expect(en.aiStudio.premiumOnlyTitle).toBeTruthy();
+    expect(ro.aiStudio.premiumOnlyBody).toMatch(/Premium/);
+    expect(en.aiStudio.premiumOnlyBody).toMatch(/Premium/);
+    expect(ro.aiStudio.premiumRequired).toBeTruthy();
+    expect(en.aiStudio.premiumRequired).toBeTruthy();
+  });
+});
+
+describe("AI Studio premium plan gate", () => {
+  it("allows only Premium; Start and Business stay locked", async () => {
+    const { hasPremiumPlan, isNonPremiumPlan } = await import("@/lib/billing");
+    expect(hasPremiumPlan("premium")).toBe(true);
+    expect(isNonPremiumPlan("premium")).toBe(false);
+    for (const plan of ["start", "business", ""] as const) {
+      expect(hasPremiumPlan(plan)).toBe(false);
+      expect(isNonPremiumPlan(plan)).toBe(true);
+    }
+  });
+
+  it("exposes a Premium pricing upgrade CTA in copy", () => {
+    expect(en.aiStudio.premiumUpgradeCta).toBeTruthy();
+    expect(ro.aiStudio.premiumUpgradeCta).toBeTruthy();
+    expect(en.aiStudio.premiumOnlyBody).toMatch(/Start and Business/);
+    expect(ro.aiStudio.premiumOnlyBody).toMatch(/Start.*Business|Business.*Start/);
   });
 });

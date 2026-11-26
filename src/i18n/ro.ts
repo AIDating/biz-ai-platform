@@ -512,6 +512,11 @@ export const ro = {
       "Generați video cu Kling AI, pe cheia API a afacerii dumneavoastră. Imaginile și conținutul text vor urma.",
     billingNote:
       "RedLine nu finanțează creditele Kling. Conectați cheia proprie — consumul și facturarea rămân între dumneavoastră și Kling AI.",
+    premiumOnlyTitle: "Planul Premium este necesar",
+    premiumOnlyBody:
+      "AI Studio este blocat pe planurile Start și Business. Treceți la Premium (£199/lună) pentru a debloca generarea video Kling pentru această afacere.",
+    premiumUpgradeCta: "Vezi prețurile Premium",
+    premiumRequired: "AI Studio este disponibil doar pe planul Premium.",
     kling: {
       cardTitle: "Conectează Kling AI",
       cardBlurb: "Cheie API per afacere, stocată criptat.",

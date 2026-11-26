@@ -44,6 +44,19 @@ export function priceForPlan(plan: string): number | null {
 }
 
 /**
+ * AI Studio (and similar Premium-only surfaces) require the Premium plan.
+ * Start (£49) and Business (£99) are explicitly non-premium and stay locked.
+ */
+export function hasPremiumPlan(plan: string): boolean {
+  return plan === "premium";
+}
+
+/** True for Start, Business, or any other non-Premium plan id. */
+export function isNonPremiumPlan(plan: string): boolean {
+  return !hasPremiumPlan(plan);
+}
+
+/**
  * Monthly recurring revenue from active paying subscriptions only.
  * Trial and suspended businesses are excluded. Unknown plans contribute nothing.
  * Amounts follow the plan catalog: Start £49, Business £99, Premium £199.
