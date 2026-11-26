@@ -40,6 +40,7 @@ async function Login() {
         <summary className="cursor-pointer font-medium">{dict.auth.demoTitle}</summary>
         <p className="mt-2 text-muted-foreground">{dict.landing.salon}</p>
         <p className="text-muted-foreground">{dict.landing.garage}</p>
+        <p className="text-muted-foreground">{dict.landing.clinic}</p>
         <p className="text-muted-foreground">{dict.landing.admin}</p>
       </details>
     </div>

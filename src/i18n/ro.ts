@@ -98,6 +98,8 @@ export const ro = {
     demoBody: "După seed, intrați cu una dintre afaceri ca să vedeți datele deja completate.",
     salon: "Salon Iris — iris@salon-iris.ro — DemoIris2026!",
     garage: "Service Auto Radu — radu@service-radu.ro — DemoRadu2026!",
+    clinic:
+      "Clinica Dentară Exemplu (Premium) — clinica@dentara-exemplu.ro — DemoClinica2026!",
     admin: "Administrare platformă — admin@redline.ro — AdminRedline2026!",
   },
   auth: {

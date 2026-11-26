@@ -100,6 +100,8 @@ export const en: Dictionary = {
     demoBody: "After seeding, sign in as one of the businesses to see a filled-in desk.",
     salon: "Salon Iris — iris@salon-iris.ro — DemoIris2026!",
     garage: "Service Auto Radu — radu@service-radu.ro — DemoRadu2026!",
+    clinic:
+      "Clinica Dentară Exemplu (Premium) — clinica@dentara-exemplu.ro — DemoClinica2026!",
     admin: "Platform admin — admin@redline.ro — AdminRedline2026!",
   },
   auth: {
