@@ -33,6 +33,7 @@ model Tenant {
   integrations  Integration[]
   proposals     ContentProposal[]
   payments      SubscriptionPayment[]
+  aiVideoJobs   AiVideoJob[]
 
   /// Platform plan: start (£49), business (£99), premium (£199).
   subscriptionPlan   String @default("start")
@@ -224,6 +225,38 @@ model ContentProposal {
   tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, status])
+}
+
+/// Per-tenant Kling AI video generation job. Credits are billed to the tenant's own Kling key.
+model AiVideoJob {
+  id             String    @id @default(cuid())
+  tenantId       String
+  /// text_to_video | image_to_video
+  mode           String
+  prompt         String
+  imageUrl       String    @default("")
+  aspectRatio    String    @default("16:9")
+  resolution     String    @default("720p")
+  durationSec    Int       @default(5)
+  /// submitted | processing | succeeded | failed
+  status         String    @default("submitted")
+  klingTaskId    String    @default("")
+  videoUrl       String    @default("")
+  watermarkUrl   String    @default("")
+  errorMessage   String    @default("")
+  /// none | pending_approval | scheduled | published | rejected
+  publishStatus  String    @default("none")
+  publishChannel String    @default("")
+  scheduledAt    DateTime?
+  publishedAt    DateTime?
+  proposalId     String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, status])
+  @@index([tenantId, klingTaskId])
 }
 
 /// A subscription charge for a business. Platform admins read these across tenants.
