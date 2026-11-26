@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Dictionary } from "@/i18n/ro";
-import { MARKETING_PLATFORMS, type MarketingPlatform } from "@/lib/marketing-oauth";
+import { MARKETING_PLATFORMS, type MarketingPlatform } from "@/lib/marketing-platforms";
 
 const initial: AiStudioActionState = { ok: false };
 

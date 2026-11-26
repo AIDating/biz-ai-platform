@@ -1,10 +1,18 @@
 import "server-only";
 import { createHmac, randomBytes } from "node:crypto";
+import {
+  isMarketingPlatform,
+  MARKETING_PLATFORMS,
+  type MarketingPlatform,
+} from "@/lib/marketing-platforms";
 import { decryptSecret, encryptSecret, maskSecretHint } from "@/lib/secret-crypto";
 import type { TenantClient } from "@/lib/tenant-db";
 
-export const MARKETING_PLATFORMS = ["facebook", "instagram", "tiktok", "youtube", "google_ads"] as const;
-export type MarketingPlatform = (typeof MARKETING_PLATFORMS)[number];
+export {
+  isMarketingPlatform,
+  MARKETING_PLATFORMS,
+  type MarketingPlatform,
+} from "@/lib/marketing-platforms";
 
 /** Google OAuth. Env vars are an optional fallback, never required to build or run. */
 export const YOUTUBE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -21,10 +29,6 @@ export const GOOGLE_ADS_OAUTH_SCOPE = "https://www.googleapis.com/auth/adwords";
 /** Platforms that finish Google's authorization-code exchange and store encrypted tokens. */
 function storesOAuthTokens(platform: MarketingPlatform) {
   return platform === "youtube" || platform === "google_ads";
-}
-
-export function isMarketingPlatform(value: string): value is MarketingPlatform {
-  return (MARKETING_PLATFORMS as readonly string[]).includes(value);
 }
 
 export type OAuthCredentials = {

@@ -11,7 +11,7 @@ import { getDictionary, getLocale } from "@/i18n";
 import { tenantHasAiStudioAccess } from "@/lib/ai-studio-access";
 import { loadKlingKeyState } from "@/lib/ai-studio-kling";
 import { requireUser } from "@/lib/auth";
-import { MARKETING_PLATFORMS, type MarketingPlatform } from "@/lib/marketing-oauth";
+import { MARKETING_PLATFORMS, type MarketingPlatform } from "@/lib/marketing-platforms";
 import { tenantDb } from "@/lib/tenant-db";
 import { formatWhen } from "@/lib/time";
 
