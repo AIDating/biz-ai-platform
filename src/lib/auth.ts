@@ -172,7 +172,10 @@ export async function registerBusiness(input: {
 }
 
 export async function loginWithPassword(email: string, password: string) {
-  const user = await basePrisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+  // NFC so Unicode demo emails (e.g. dentară) match the seeded value even if the
+  // browser/OS submits a decomposed (NFD) form.
+  const normalized = email.trim().toLowerCase().normalize("NFC");
+  const user = await basePrisma.user.findUnique({ where: { email: normalized } });
   if (!user) return { ok: false as const };
   const matches = await verifyPassword(password, user.passwordHash);
   if (!matches) return { ok: false as const };

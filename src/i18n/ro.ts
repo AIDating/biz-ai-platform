@@ -100,6 +100,9 @@ export const ro = {
     garage: "Service Auto Radu — radu@service-radu.ro — DemoRadu2026!",
     clinic:
       "Clinica Dentară Exemplu (Premium) — clinica@dentară-exemplu.ro — DemoClinica2026!",
+    clinicName: "Clinica Dentară Exemplu (Premium)",
+    clinicEmail: "clinica@dentară-exemplu.ro",
+    clinicPassword: "DemoClinica2026!",
     admin: "Administrare platformă — admin@redline.ro — AdminRedline2026!",
   },
   auth: {

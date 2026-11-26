@@ -14,7 +14,8 @@ export function LoginForm({ dict }: { dict: Dictionary }) {
   return (
     <form action={action} className="space-y-4">
       <Field label={dict.auth.email}>
-        <Input name="email" type="email" autoComplete="email" required />
+        {/* type=text so Unicode demo emails (ă) are accepted; browsers reject many IDN addresses in type=email */}
+        <Input name="email" type="text" inputMode="email" autoComplete="email" required />
       </Field>
       <Field label={dict.auth.password}>
         <Input name="password" type="password" autoComplete="current-password" required />

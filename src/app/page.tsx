@@ -132,7 +132,14 @@ async function Home() {
           <p>{dict.landing.demoBody}</p>
           <p className="mt-1">{dict.landing.salon}</p>
           <p>{dict.landing.garage}</p>
-          <p>{dict.landing.clinic}</p>
+          <p>
+            <span className="font-medium text-foreground">{dict.landing.clinicName}</span>
+            {" — "}
+            {dict.landing.clinicEmail}
+            {" — "}
+            {dict.landing.clinicPassword}
+          </p>
+          <p>{dict.landing.admin}</p>
         </div>
         <p>© 2026 REDLINE</p>
       </footer>

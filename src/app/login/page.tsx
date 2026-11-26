@@ -36,13 +36,21 @@ async function Login() {
           </Link>
         </p>
       </div>
-      <details className="mt-4 border px-4 py-3 text-sm">
-        <summary className="cursor-pointer font-medium">{dict.auth.demoTitle}</summary>
-        <p className="mt-2 text-muted-foreground">{dict.landing.salon}</p>
-        <p className="text-muted-foreground">{dict.landing.garage}</p>
-        <p className="text-muted-foreground">{dict.landing.clinic}</p>
-        <p className="text-muted-foreground">{dict.landing.admin}</p>
-      </details>
+      <div className="mt-4 border border-[#ececec] border-l-2 border-l-[#e10600] px-4 py-3 text-sm">
+        <p className="font-medium">{dict.auth.demoTitle}</p>
+        <ul className="mt-2 space-y-2 text-muted-foreground">
+          <li>{dict.landing.salon}</li>
+          <li>{dict.landing.garage}</li>
+          <li>
+            <span className="font-medium text-foreground">{dict.landing.clinicName}</span>
+            <br />
+            {dict.auth.email}: {dict.landing.clinicEmail}
+            <br />
+            {dict.auth.password}: {dict.landing.clinicPassword}
+          </li>
+          <li>{dict.landing.admin}</li>
+        </ul>
+      </div>
     </div>
   );
 }
