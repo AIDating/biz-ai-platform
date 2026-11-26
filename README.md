@@ -21,7 +21,7 @@ Demo accounts after seeding:
 | --- | --- | --- |
 | Salon Iris | iris@salon-iris.ro | DemoIris2026! |
 | Service Auto Radu | radu@service-radu.ro | DemoRadu2026! |
-| Clinica Dentară Exemplu (Premium) | clinica@dentara-exemplu.ro | DemoClinica2026! |
+| Clinica Dentară Exemplu (Premium) | clinica@dentară-exemplu.ro | DemoClinica2026! |
 
 The salon test page is [http://127.0.0.1:43123/preview/pk_demo_saloniris](http://127.0.0.1:43123/preview/pk_demo_saloniris).
 The dental clinic preview is [http://127.0.0.1:43123/preview/pk_demo_clinicadentara](http://127.0.0.1:43123/preview/pk_demo_clinicadentara).
@@ -110,7 +110,7 @@ Conturi demo, după seed:
 | --- | --- | --- |
 | Salon Iris | iris@salon-iris.ro | DemoIris2026! |
 | Service Auto Radu | radu@service-radu.ro | DemoRadu2026! |
-| Clinica Dentară Exemplu (Premium) | clinica@dentara-exemplu.ro | DemoClinica2026! |
+| Clinica Dentară Exemplu (Premium) | clinica@dentară-exemplu.ro | DemoClinica2026! |
 
 Pagina de test a salonului: [http://127.0.0.1:43123/preview/pk_demo_saloniris](http://127.0.0.1:43123/preview/pk_demo_saloniris).
 Previzualizare clinică: [http://127.0.0.1:43123/preview/pk_demo_clinicadentara](http://127.0.0.1:43123/preview/pk_demo_clinicadentara).

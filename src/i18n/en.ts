@@ -101,7 +101,7 @@ export const en: Dictionary = {
     salon: "Salon Iris — iris@salon-iris.ro — DemoIris2026!",
     garage: "Service Auto Radu — radu@service-radu.ro — DemoRadu2026!",
     clinic:
-      "Clinica Dentară Exemplu (Premium) — clinica@dentara-exemplu.ro — DemoClinica2026!",
+      "Clinica Dentară Exemplu (Premium) — clinica@dentară-exemplu.ro — DemoClinica2026!",
     admin: "Platform admin — admin@redline.ro — AdminRedline2026!",
   },
   auth: {

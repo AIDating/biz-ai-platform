@@ -283,7 +283,7 @@ async function main() {
       currency: "GBP",
       users: {
         create: {
-          email: "clinica@dentara-exemplu.ro",
+          email: "clinica@dentară-exemplu.ro",
           name: "Dr. Elena Popescu",
           passwordHash: clinicaPassword,
           role: "owner",
