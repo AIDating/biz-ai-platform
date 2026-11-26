@@ -17,6 +17,7 @@ const GUARDED = new Set([
   "Appointment",
   "Integration",
   "ContentProposal",
+  "AiVideoJob",
 ]);
 
 const BLOCKED = new Set([

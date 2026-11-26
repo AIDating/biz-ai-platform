@@ -46,10 +46,13 @@ function monthWindow(monthsAgo: number) {
 
 async function main() {
   await prisma.user.deleteMany({ where: { email: "admin@redline.ro" } });
-  await prisma.tenant.deleteMany({ where: { slug: { in: ["salon-iris", "service-auto-radu"] } } });
+  await prisma.tenant.deleteMany({
+    where: { slug: { in: ["salon-iris", "service-auto-radu", "clinica-dentara-exemplu"] } },
+  });
 
   const irisPassword = await hashPassword("DemoIris2026!");
   const raduPassword = await hashPassword("DemoRadu2026!");
+  const clinicaPassword = await hashPassword("DemoClinica2026!");
   const adminPassword = await hashPassword("AdminRedline2026!");
 
   const iris = await prisma.tenant.create({
@@ -269,11 +272,89 @@ async function main() {
     },
   });
 
+  const clinica = await prisma.tenant.create({
+    data: {
+      name: "Clinica Dentară Exemplu",
+      slug: "clinica-dentara-exemplu",
+      publicKey: "pk_demo_clinicadentara",
+      subscriptionPlan: "premium",
+      subscriptionStatus: "active",
+      monthlyPricePence: PLAN_MONTHLY_PENCE.premium,
+      currency: "GBP",
+      users: {
+        create: {
+          email: "clinica@dentară-exemplu.ro",
+          name: "Dr. Elena Popescu",
+          passwordHash: clinicaPassword,
+          role: "owner",
+        },
+      },
+      agent: {
+        create: {
+          businessName: "Clinica Dentară Exemplu",
+          description:
+            "Clinică stomatologică în București. Consultații, igienizare, obturații și implantologie, cu programare.",
+          servicesJson: serializeServices([
+            { name: "Consultație", detail: "", durationMin: 30, price: 150, currency: "RON", note: "" },
+            { name: "Igienizare", detail: "", durationMin: 45, price: 250, currency: "RON", note: "" },
+            { name: "Obturație", detail: "", durationMin: 60, price: 300, currency: "RON", note: "de la" },
+            { name: "Implant consult", detail: "", durationMin: 45, price: 200, currency: "RON", note: "" },
+          ]),
+          tone: "profesional",
+          customInstructions: "Nu oferi diagnostice definitive pe chat. Propune consultație la clinică.",
+          greeting: "Bună! Sunt recepția Clinicii Dentare Exemplu. Cu ce vă pot ajuta?",
+          enabled: true,
+          slotMinutes: 30,
+          timezone: "Europe/Bucharest",
+        },
+      },
+    },
+  });
+
+  for (const day of [0, 1, 2, 3, 4, 5, 6]) {
+    await prisma.availabilityRule.create({
+      data: {
+        tenantId: clinica.id,
+        dayOfWeek: day,
+        startMin: 9 * 60,
+        endMin: 18 * 60,
+        enabled: day >= 1 && day <= 5,
+      },
+    });
+  }
+
+  await prisma.lead.create({
+    data: {
+      tenantId: clinica.id,
+      name: "Ioana Vasilescu",
+      phone: "0733123456",
+      note: "Vrea igienizare săptămâna aceasta.",
+      status: "new",
+      source: "web_widget",
+    },
+  });
+
+  const clinicaStart = atNext(2, 10, 0, tz);
+  await prisma.appointment.create({
+    data: {
+      tenantId: clinica.id,
+      clientName: "Ioana Vasilescu",
+      clientPhone: "0733123456",
+      service: "Igienizare",
+      startsAt: clinicaStart,
+      endsAt: new Date(clinicaStart.getTime() + 45 * 60_000),
+      status: "booked",
+      source: "web_widget",
+    },
+  });
+
   const irisCurrent = monthWindow(0);
   const irisPrevious = monthWindow(1);
   const irisOlder = monthWindow(2);
   const raduCurrent = monthWindow(0);
   const raduPrevious = monthWindow(1);
+  const clinicaCurrent = monthWindow(0);
+  const clinicaPrevious = monthWindow(1);
   await prisma.subscriptionPayment.createMany({
     data: [
       {
@@ -331,6 +412,28 @@ async function main() {
         invoiceRef: "INV-RADU-002",
         createdAt: raduCurrent.billedAt,
       },
+      {
+        tenantId: clinica.id,
+        plan: "premium",
+        amountPence: PLAN_MONTHLY_PENCE.premium,
+        currency: "GBP",
+        status: "succeeded",
+        periodStart: clinicaPrevious.start,
+        periodEnd: clinicaPrevious.end,
+        invoiceRef: "INV-CLINICA-001",
+        createdAt: clinicaPrevious.billedAt,
+      },
+      {
+        tenantId: clinica.id,
+        plan: "premium",
+        amountPence: PLAN_MONTHLY_PENCE.premium,
+        currency: "GBP",
+        status: "succeeded",
+        periodStart: clinicaCurrent.start,
+        periodEnd: clinicaCurrent.end,
+        invoiceRef: "INV-CLINICA-002",
+        createdAt: clinicaCurrent.billedAt,
+      },
     ],
   });
 
@@ -346,7 +449,9 @@ async function main() {
   await prisma.$executeRawUnsafe(
     `CREATE UNIQUE INDEX IF NOT EXISTS "Appointment_no_double_book" ON "Appointment"("tenantId", "startsAt") WHERE "status" != 'cancelled'`,
   );
-  console.log("Seed gata. Salon Iris, Service Auto Radu și admin@redline.ro.");
+  console.log(
+    "Seed gata. Salon Iris, Service Auto Radu, Clinica Dentară Exemplu și admin@redline.ro.",
+  );
 }
 
 main()

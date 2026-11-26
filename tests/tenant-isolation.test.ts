@@ -50,4 +50,28 @@ describe("tenant isolation", () => {
     expect(seen).toHaveLength(1);
     expect(seen[0]?.name).toBe("B");
   });
+
+  it("isolates AI Studio video jobs between tenants", async () => {
+    const first = await createTenant("AiStudioA");
+    const second = await createTenant("AiStudioB");
+    const a = tenantDb(first.id);
+    const b = tenantDb(second.id);
+
+    const secret = await a.aiVideoJob.create({
+      data: {
+        tenantId: first.id,
+        mode: "text_to_video",
+        prompt: "secret reel",
+        status: "succeeded",
+        videoUrl: "https://example.com/a.mp4",
+      },
+    });
+
+    expect(await b.aiVideoJob.findMany()).toEqual([]);
+    expect(await b.aiVideoJob.findFirst({ where: { id: secret.id } })).toBeNull();
+    expect(
+      (await b.aiVideoJob.updateMany({ where: { id: secret.id }, data: { prompt: "hacked" } })).count,
+    ).toBe(0);
+    expect((await a.aiVideoJob.findFirst({ where: { id: secret.id } }))?.prompt).toBe("secret reel");
+  });
 });

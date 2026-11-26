@@ -13,6 +13,7 @@ export default defineConfig({
       "tests/marketing-youtube.test.ts",
       "tests/marketing-google-ads.test.ts",
       "tests/marketing-analytics.test.ts",
+      "tests/ai-studio-kling.test.ts",
     ],
   },
   resolve: {
